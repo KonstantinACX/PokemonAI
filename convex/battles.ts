@@ -104,11 +104,11 @@ export const performMove = mutation({
     const attackerHp = isPlayer1Turn ? battle.player1Hp : battle.player2Hp;
     const defenderHp = isPlayer1Turn ? battle.player2Hp : battle.player1Hp;
 
-    if (moveIndex >= attacker.moves.length) {
+    if (args.moveIndex >= attacker.moves.length) {
       throw new Error("Invalid move index");
     }
 
-    const move = attacker.moves[moveIndex];
+    const move = attacker.moves[args.moveIndex];
     
     // Check accuracy
     const hitChance = Math.random() * 100;
@@ -155,6 +155,83 @@ export const performMove = mutation({
         : { player1Hp: newDefenderHp }
       ),
       currentTurn: newStatus === "active" ? (isPlayer1Turn ? "player2" : "player1") : battle.currentTurn,
+      status: newStatus,
+      battleLog: newLog,
+    });
+  },
+});
+
+export const performAIMove = mutation({
+  args: {
+    battleId: v.id("battles"),
+  },
+  handler: async (ctx, args) => {
+    const battle = await ctx.db.get(args.battleId);
+    if (!battle || battle.status !== "active" || battle.currentTurn !== "player2") {
+      return; // Only AI moves when it's player2's turn
+    }
+
+    const pokemon2 = await ctx.db.get(battle.player2Pokemon);
+    if (!pokemon2) return;
+
+    // Simple AI: choose a random move
+    const moveIndex = Math.floor(Math.random() * pokemon2.moves.length);
+    
+    // Use the existing performMove logic
+    const [pokemon1] = await Promise.all([
+      ctx.db.get(battle.player1Pokemon),
+    ]);
+
+    if (!pokemon1) return;
+
+    const attacker = pokemon2;
+    const defender = pokemon1;
+    const defenderHp = battle.player1Hp;
+
+    const move = attacker.moves[moveIndex];
+    
+    // Check accuracy
+    const hitChance = Math.random() * 100;
+    if (hitChance > move.accuracy) {
+      const newLog = [...battle.battleLog, `${attacker.name} used ${move.name}, but it missed!`];
+      await ctx.db.patch(args.battleId, {
+        currentTurn: "player1",
+        battleLog: newLog,
+      });
+      return;
+    }
+
+    const damage = calculateDamage(move, attacker.attack, defender.defense, defender.types);
+    const newDefenderHp = Math.max(0, defenderHp - damage);
+
+    let effectiveness = "";
+    let multiplier = 1;
+    for (const defenderType of defender.types) {
+      const attackerTypeChart = typeChart[move.type];
+      if (attackerTypeChart.strong.includes(defenderType)) {
+        multiplier *= 2;
+      } else if (attackerTypeChart.weak.includes(defenderType)) {
+        multiplier *= 0.5;
+      } else if (attackerTypeChart.immune.includes(defenderType)) {
+        multiplier *= 0;
+      }
+    }
+    
+    if (multiplier > 1) effectiveness = " It's super effective!";
+    else if (multiplier < 1 && multiplier > 0) effectiveness = " It's not very effective...";
+    else if (multiplier === 0) effectiveness = " It has no effect!";
+
+    let newLog = [...battle.battleLog, `${attacker.name} used ${move.name}! It dealt ${damage} damage.${effectiveness}`];
+
+    let newStatus: "active" | "player1_wins" | "player2_wins" = "active";
+    if (newDefenderHp === 0) {
+      newStatus = "player2_wins";
+      newLog.push(`${defender.name} fainted! ${attacker.name} wins!`);
+    }
+
+    await ctx.db.patch(args.battleId, {
+      player1Hp: newDefenderHp,
+      currentTurn: newStatus === "active" ? "player1" : battle.currentTurn,
       status: newStatus,
       battleLog: newLog,
     });

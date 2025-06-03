@@ -1,5 +1,5 @@
 import { useMutation } from "convex/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Swords, Sparkles } from "lucide-react";
 import { api } from "../../convex/_generated/api";
@@ -170,12 +170,12 @@ function PokemonCard({
 
 function BattleLink({ battleId }: { battleId: Id<"battles"> }) {
   return (
-    <a 
-      href={`/battle/${battleId}`}
+    <Link 
+      to={`/battle/${battleId}`}
       className="btn btn-success"
     >
       <Swords className="w-4 h-4" />
       Enter Battle
-    </a>
+    </Link>
   );
 }

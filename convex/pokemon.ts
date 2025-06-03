@@ -45,7 +45,7 @@ function generateRandomPokemon() {
   }
   
   while (moves.length < numMoves) {
-    const availableMoves = moves.length === 1 ? [...typeMoves, ...otherMoves] : otherMoves;
+    const availableMoves: typeof movePool = moves.length === 1 ? [...typeMoves, ...otherMoves] : otherMoves;
     const move = availableMoves[Math.floor(Math.random() * availableMoves.length)];
     if (!moves.find(m => m.name === move.name)) {
       moves.push(move);

@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { ArrowLeft, Heart, Shield, Sword, Zap } from "lucide-react";
+import { useEffect } from "react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 
@@ -19,6 +20,7 @@ function BattlePage() {
   const { battleId } = Route.useParams();
   const { data: battle } = useSuspenseQuery(battleQueryOptions(battleId as Id<"battles">));
   const performMove = useMutation(api.battles.performMove);
+  const performAIMove = useMutation(api.battles.performAIMove);
 
   if (!battle) {
     return <div>Battle not found</div>;
@@ -34,6 +36,18 @@ function BattlePage() {
   const isPlayerTurn = battle.currentTurn === "player1";
   const currentPokemon = isPlayerTurn ? battle.pokemon1 : battle.pokemon2;
   const isGameOver = battle.status !== "active";
+
+  // Auto-trigger AI move when it's opponent's turn
+  useEffect(() => {
+    if (!isPlayerTurn && !isGameOver) {
+      // Add a small delay to make the AI move feel more natural
+      const timer = setTimeout(() => {
+        performAIMove({ battleId: battleId as Id<"battles"> });
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isPlayerTurn, isGameOver, performAIMove, battleId]);
 
   return (
     <div className="max-w-4xl mx-auto">

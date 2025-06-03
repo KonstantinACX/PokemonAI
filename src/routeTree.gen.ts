@@ -12,12 +12,19 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
+import { Route as BattleBattleIdImport } from './routes/battle.$battleId'
 
 // Create/Update Routes
 
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const BattleBattleIdRoute = BattleBattleIdImport.update({
+  id: '/battle/$battleId',
+  path: '/battle/$battleId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -32,6 +39,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/battle/$battleId': {
+      id: '/battle/$battleId'
+      path: '/battle/$battleId'
+      fullPath: '/battle/$battleId'
+      preLoaderRoute: typeof BattleBattleIdImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -39,32 +53,37 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/battle/$battleId': typeof BattleBattleIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/battle/$battleId': typeof BattleBattleIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/battle/$battleId': typeof BattleBattleIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/battle/$battleId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/battle/$battleId'
+  id: '__root__' | '/' | '/battle/$battleId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BattleBattleIdRoute: typeof BattleBattleIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BattleBattleIdRoute: BattleBattleIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -77,11 +96,15 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/"
+        "/",
+        "/battle/$battleId"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/battle/$battleId": {
+      "filePath": "battle.$battleId.tsx"
     }
   }
 }
