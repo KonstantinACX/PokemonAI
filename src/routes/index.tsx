@@ -1,4 +1,4 @@
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Swords, Sparkles } from "lucide-react";
@@ -153,16 +153,39 @@ function PokemonCard({
   onClick: () => void;
   index: number;
 }) {
+  const pokemon = useQuery(api.pokemon.getPokemon, { id: pokemonId });
+
+  if (!pokemon) {
+    return (
+      <div className="card bg-base-100 w-40 cursor-pointer animate-pulse">
+        <div className="card-body p-3">
+          <div className="h-4 bg-base-300 rounded w-3/4 mb-2"></div>
+          <div className="h-3 bg-base-300 rounded w-1/2"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
-      className={`card bg-base-100 w-32 cursor-pointer transition-all hover:scale-105 ${
+      className={`card bg-base-100 w-40 cursor-pointer transition-all hover:scale-105 ${
         isSelected ? "ring-2 ring-primary" : ""
       }`}
       onClick={onClick}
     >
-      <div className="card-body p-4">
-        <div className="text-sm font-bold">Pokemon #{index}</div>
-        <div className="text-xs opacity-70">Click to select</div>
+      <div className="card-body p-3">
+        <div className="text-sm font-bold truncate">{pokemon.name}</div>
+        <div className="flex gap-1 mb-2">
+          {pokemon.types.map((type: string) => (
+            <span key={type} className="badge badge-primary badge-xs">
+              {type}
+            </span>
+          ))}
+        </div>
+        <div className="text-xs space-y-1 opacity-80">
+          <div>HP: {pokemon.hp}</div>
+          <div>ATK: {pokemon.attack}</div>
+        </div>
       </div>
     </div>
   );
