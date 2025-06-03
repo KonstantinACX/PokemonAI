@@ -37,6 +37,8 @@ function HomePage() {
     if (!selectedPokemon.player || !selectedPokemon.opponent) return;
     
     const newBattleId = await createBattle({
+      player1Team: playerTeam,
+      player2Team: opponentTeam,
       player1Pokemon: selectedPokemon.player,
       player2Pokemon: selectedPokemon.opponent,
     });

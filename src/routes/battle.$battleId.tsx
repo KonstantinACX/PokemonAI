@@ -21,6 +21,7 @@ function BattlePage() {
   const { data: battle } = useSuspenseQuery(battleQueryOptions(battleId as Id<"battles">));
   const performMove = useMutation(api.battles.performMove);
   const performAIMove = useMutation(api.battles.performAIMove);
+  const switchPokemon = useMutation(api.battles.switchPokemon);
 
   if (!battle) {
     return <div>Battle not found</div>;
@@ -33,21 +34,43 @@ function BattlePage() {
     });
   };
 
+  const handleSwitchPokemon = async (pokemonId: Id<"pokemon">) => {
+    await switchPokemon({
+      battleId: battleId as Id<"battles">,
+      pokemonId,
+    });
+  };
+
   const isPlayerTurn = battle.currentTurn === "player1";
   const currentPokemon = isPlayerTurn ? battle.pokemon1 : battle.pokemon2;
-  const isGameOver = battle.status !== "active";
+  const isGameOver = battle.status === "player1_wins" || battle.status === "player2_wins";
+  const isPlayerSelecting = battle.status === "player1_selecting";
+  const isOpponentSelecting = battle.status === "player2_selecting";
+  const isActive = battle.status === "active";
 
-  // Auto-trigger AI move when it's opponent's turn
+  // Auto-trigger AI move when it's opponent's turn or AI needs to select Pokemon
   useEffect(() => {
-    if (!isPlayerTurn && !isGameOver) {
+    if ((!isPlayerTurn && isActive) || isOpponentSelecting) {
       // Add a small delay to make the AI move feel more natural
       const timer = setTimeout(() => {
-        performAIMove({ battleId: battleId as Id<"battles"> });
+        if (isOpponentSelecting) {
+          // AI needs to select a new Pokemon
+          const availablePokemon = battle.player2Team.filter(pokemon => 
+            !battle.player2FaintedPokemon.includes(pokemon._id) && 
+            pokemon._id !== battle.player2ActivePokemon
+          );
+          if (availablePokemon.length > 0) {
+            const randomPokemon = availablePokemon[Math.floor(Math.random() * availablePokemon.length)];
+            handleSwitchPokemon(randomPokemon._id);
+          }
+        } else {
+          performAIMove({ battleId: battleId as Id<"battles"> });
+        }
       }, 1500);
       
       return () => clearTimeout(timer);
     }
-  }, [isPlayerTurn, isGameOver, performAIMove, battleId]);
+  }, [isPlayerTurn, isActive, isOpponentSelecting, performAIMove, battleId, battle, handleSwitchPokemon]);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -67,13 +90,13 @@ function BattlePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <PokemonDisplay
               pokemon={battle.pokemon1}
-              currentHp={battle.player1Hp}
+              currentHp={battle.player1ActiveHp}
               isActive={isPlayerTurn}
               label="Your Pokemon"
             />
             <PokemonDisplay
               pokemon={battle.pokemon2}
-              currentHp={battle.player2Hp}
+              currentHp={battle.player2ActiveHp}
               isActive={!isPlayerTurn}
               label="Opponent"
             />
@@ -81,26 +104,65 @@ function BattlePage() {
 
           {!isGameOver && (
             <div className="mb-6">
-              <h3 className="text-center mb-4">
-                {isPlayerTurn ? "Choose your move!" : "Opponent is choosing..."}
-              </h3>
+              {isPlayerSelecting && (
+                <div>
+                  <h3 className="text-center mb-4 text-warning">
+                    Choose your next Pokemon!
+                  </h3>
+                  <div className="grid grid-cols-3 gap-3 max-w-md mx-auto">
+                    {battle.player1Team
+                      .filter(pokemon => 
+                        !battle.player1FaintedPokemon.includes(pokemon._id) && 
+                        pokemon._id !== battle.player1ActivePokemon
+                      )
+                      .map((pokemon) => (
+                        <button
+                          key={pokemon._id}
+                          className="btn btn-outline"
+                          onClick={() => handleSwitchPokemon(pokemon._id)}
+                        >
+                          <div className="text-center">
+                            <div className="font-bold text-sm">{pokemon.name}</div>
+                            <div className="text-xs opacity-70">
+                              HP: {pokemon.hp}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
               
-              {isPlayerTurn && currentPokemon && (
-                <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
-                  {currentPokemon.moves.map((move, index) => (
-                    <button
-                      key={index}
-                      className="btn btn-outline"
-                      onClick={() => handleMove(index)}
-                    >
-                      <div className="text-left">
-                        <div className="font-bold">{move.name}</div>
-                        <div className="text-xs opacity-70">
-                          {move.type} • {move.power} PWR
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+              {isOpponentSelecting && (
+                <h3 className="text-center mb-4">
+                  Opponent is choosing their next Pokemon...
+                </h3>
+              )}
+              
+              {isActive && (
+                <div>
+                  <h3 className="text-center mb-4">
+                    {isPlayerTurn ? "Choose your move!" : "Opponent is choosing..."}
+                  </h3>
+                  
+                  {isPlayerTurn && currentPokemon && (
+                    <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                      {currentPokemon.moves.map((move, index) => (
+                        <button
+                          key={index}
+                          className="btn btn-outline"
+                          onClick={() => handleMove(index)}
+                        >
+                          <div className="text-left">
+                            <div className="font-bold">{move.name}</div>
+                            <div className="text-xs opacity-70">
+                              {move.type} • {move.power} PWR
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

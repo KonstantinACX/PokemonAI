@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
+import { api } from "./_generated/api";
 
 const typeChart: Record<string, { strong: string[], weak: string[], immune: string[] }> = {
   Fire: { strong: ["Grass", "Ice", "Bug", "Steel"], weak: ["Water", "Ground", "Rock"], immune: [] },
@@ -52,6 +53,8 @@ function calculateDamage(
 
 export const createBattle = mutation({
   args: {
+    player1Team: v.array(v.id("pokemon")),
+    player2Team: v.array(v.id("pokemon")),
     player1Pokemon: v.id("pokemon"),
     player2Pokemon: v.id("pokemon"),
   },
@@ -67,11 +70,15 @@ export const createBattle = mutation({
     const firstTurn = pokemon1.speed >= pokemon2.speed ? "player1" : "player2";
 
     return await ctx.db.insert("battles", {
-      player1Pokemon: args.player1Pokemon,
-      player2Pokemon: args.player2Pokemon,
+      player1Team: args.player1Team,
+      player2Team: args.player2Team,
+      player1ActivePokemon: args.player1Pokemon,
+      player2ActivePokemon: args.player2Pokemon,
       currentTurn: firstTurn,
-      player1Hp: pokemon1.hp,
-      player2Hp: pokemon2.hp,
+      player1ActiveHp: pokemon1.hp,
+      player2ActiveHp: pokemon2.hp,
+      player1FaintedPokemon: [],
+      player2FaintedPokemon: [],
       status: "active",
       battleLog: [`Battle begins! ${pokemon1.name} vs ${pokemon2.name}`],
     });
@@ -90,8 +97,8 @@ export const performMove = mutation({
     }
 
     const [pokemon1, pokemon2] = await Promise.all([
-      ctx.db.get(battle.player1Pokemon),
-      ctx.db.get(battle.player2Pokemon),
+      ctx.db.get(battle.player1ActivePokemon),
+      ctx.db.get(battle.player2ActivePokemon),
     ]);
 
     if (!pokemon1 || !pokemon2) {
@@ -101,8 +108,8 @@ export const performMove = mutation({
     const isPlayer1Turn = battle.currentTurn === "player1";
     const attacker = isPlayer1Turn ? pokemon1 : pokemon2;
     const defender = isPlayer1Turn ? pokemon2 : pokemon1;
-    const attackerHp = isPlayer1Turn ? battle.player1Hp : battle.player2Hp;
-    const defenderHp = isPlayer1Turn ? battle.player2Hp : battle.player1Hp;
+    const attackerHp = isPlayer1Turn ? battle.player1ActiveHp : battle.player2ActiveHp;
+    const defenderHp = isPlayer1Turn ? battle.player2ActiveHp : battle.player1ActiveHp;
 
     if (args.moveIndex >= attacker.moves.length) {
       throw new Error("Invalid move index");
@@ -143,21 +150,102 @@ export const performMove = mutation({
 
     let newLog = [...battle.battleLog, `${attacker.name} used ${move.name}! It dealt ${damage} damage.${effectiveness}`];
 
-    let newStatus: "active" | "player1_wins" | "player2_wins" = "active";
+    // Handle Pokemon fainting
     if (newDefenderHp === 0) {
-      newStatus = isPlayer1Turn ? "player1_wins" : "player2_wins";
-      newLog.push(`${defender.name} fainted! ${attacker.name} wins!`);
+      newLog.push(`${defender.name} fainted!`);
+      
+      const defendingPlayer = isPlayer1Turn ? "player2" : "player1";
+      const newFaintedList = isPlayer1Turn 
+        ? [...battle.player2FaintedPokemon, battle.player2ActivePokemon]
+        : [...battle.player1FaintedPokemon, battle.player1ActivePokemon];
+      
+      const availableTeam = isPlayer1Turn ? battle.player2Team : battle.player1Team;
+      const faintedPokemon = isPlayer1Turn ? battle.player2FaintedPokemon : battle.player1FaintedPokemon;
+      const remainingPokemon = availableTeam.filter(id => !faintedPokemon.includes(id) && id !== (isPlayer1Turn ? battle.player2ActivePokemon : battle.player1ActivePokemon));
+      
+      if (remainingPokemon.length === 0) {
+        // All Pokemon fainted - battle ends
+        const newStatus = isPlayer1Turn ? "player1_wins" : "player2_wins";
+        const winner = isPlayer1Turn ? pokemon1.name : pokemon2.name;
+        newLog.push(`All ${defendingPlayer === "player1" ? "Player 1's" : "Player 2's"} Pokemon have fainted! ${winner} wins the battle!`);
+        
+        await ctx.db.patch(args.battleId, {
+          ...(isPlayer1Turn 
+            ? { player2ActiveHp: newDefenderHp, player2FaintedPokemon: newFaintedList } 
+            : { player1ActiveHp: newDefenderHp, player1FaintedPokemon: newFaintedList }
+          ),
+          status: newStatus,
+          battleLog: newLog,
+        });
+      } else {
+        // Pokemon available - need to select new one
+        const newStatus = isPlayer1Turn ? "player2_selecting" : "player1_selecting";
+        
+        await ctx.db.patch(args.battleId, {
+          ...(isPlayer1Turn 
+            ? { player2ActiveHp: newDefenderHp, player2FaintedPokemon: newFaintedList } 
+            : { player1ActiveHp: newDefenderHp, player1FaintedPokemon: newFaintedList }
+          ),
+          status: newStatus,
+          battleLog: newLog,
+        });
+      }
+    } else {
+      // Pokemon survives - continue battle
+      await ctx.db.patch(args.battleId, {
+        ...(isPlayer1Turn 
+          ? { player2ActiveHp: newDefenderHp } 
+          : { player1ActiveHp: newDefenderHp }
+        ),
+        currentTurn: isPlayer1Turn ? "player2" : "player1",
+        battleLog: newLog,
+      });
+    }
+  },
+});
+
+export const switchPokemon = mutation({
+  args: {
+    battleId: v.id("battles"),
+    pokemonId: v.id("pokemon"),
+  },
+  handler: async (ctx, args) => {
+    const battle = await ctx.db.get(args.battleId);
+    if (!battle) {
+      throw new Error("Battle not found");
     }
 
-    await ctx.db.patch(args.battleId, {
-      ...(isPlayer1Turn 
-        ? { player2Hp: newDefenderHp } 
-        : { player1Hp: newDefenderHp }
-      ),
-      currentTurn: newStatus === "active" ? (isPlayer1Turn ? "player2" : "player1") : battle.currentTurn,
-      status: newStatus,
-      battleLog: newLog,
-    });
+    const pokemon = await ctx.db.get(args.pokemonId);
+    if (!pokemon) {
+      throw new Error("Pokemon not found");
+    }
+
+    const isPlayer1Selecting = battle.status === "player1_selecting";
+    const isPlayer2Selecting = battle.status === "player2_selecting";
+    
+    if (!isPlayer1Selecting && !isPlayer2Selecting) {
+      throw new Error("Not in Pokemon selection phase");
+    }
+
+    const newLog = [...battle.battleLog, `${isPlayer1Selecting ? "Player 1" : "Player 2"} sent out ${pokemon.name}!`];
+
+    if (isPlayer1Selecting) {
+      await ctx.db.patch(args.battleId, {
+        player1ActivePokemon: args.pokemonId,
+        player1ActiveHp: pokemon.hp,
+        status: "active",
+        currentTurn: "player1", // Player who just switched gets first turn
+        battleLog: newLog,
+      });
+    } else {
+      await ctx.db.patch(args.battleId, {
+        player2ActivePokemon: args.pokemonId,
+        player2ActiveHp: pokemon.hp,
+        status: "active", 
+        currentTurn: "player2", // Player who just switched gets first turn
+        battleLog: newLog,
+      });
+    }
   },
 });
 
@@ -171,69 +259,16 @@ export const performAIMove = mutation({
       return; // Only AI moves when it's player2's turn
     }
 
-    const pokemon2 = await ctx.db.get(battle.player2Pokemon);
+    // Just call performMove with a random move index
+    const pokemon2 = await ctx.db.get(battle.player2ActivePokemon);
     if (!pokemon2) return;
 
-    // Simple AI: choose a random move
     const moveIndex = Math.floor(Math.random() * pokemon2.moves.length);
     
-    // Use the existing performMove logic
-    const [pokemon1] = await Promise.all([
-      ctx.db.get(battle.player1Pokemon),
-    ]);
-
-    if (!pokemon1) return;
-
-    const attacker = pokemon2;
-    const defender = pokemon1;
-    const defenderHp = battle.player1Hp;
-
-    const move = attacker.moves[moveIndex];
-    
-    // Check accuracy
-    const hitChance = Math.random() * 100;
-    if (hitChance > move.accuracy) {
-      const newLog = [...battle.battleLog, `${attacker.name} used ${move.name}, but it missed!`];
-      await ctx.db.patch(args.battleId, {
-        currentTurn: "player1",
-        battleLog: newLog,
-      });
-      return;
-    }
-
-    const damage = calculateDamage(move, attacker.attack, defender.defense, defender.types);
-    const newDefenderHp = Math.max(0, defenderHp - damage);
-
-    let effectiveness = "";
-    let multiplier = 1;
-    for (const defenderType of defender.types) {
-      const attackerTypeChart = typeChart[move.type];
-      if (attackerTypeChart.strong.includes(defenderType)) {
-        multiplier *= 2;
-      } else if (attackerTypeChart.weak.includes(defenderType)) {
-        multiplier *= 0.5;
-      } else if (attackerTypeChart.immune.includes(defenderType)) {
-        multiplier *= 0;
-      }
-    }
-    
-    if (multiplier > 1) effectiveness = " It's super effective!";
-    else if (multiplier < 1 && multiplier > 0) effectiveness = " It's not very effective...";
-    else if (multiplier === 0) effectiveness = " It has no effect!";
-
-    let newLog = [...battle.battleLog, `${attacker.name} used ${move.name}! It dealt ${damage} damage.${effectiveness}`];
-
-    let newStatus: "active" | "player1_wins" | "player2_wins" = "active";
-    if (newDefenderHp === 0) {
-      newStatus = "player2_wins";
-      newLog.push(`${defender.name} fainted! ${attacker.name} wins!`);
-    }
-
-    await ctx.db.patch(args.battleId, {
-      player1Hp: newDefenderHp,
-      currentTurn: newStatus === "active" ? "player1" : battle.currentTurn,
-      status: newStatus,
-      battleLog: newLog,
+    // Use the existing performMove logic by calling it
+    return await ctx.runMutation(api.battles.performMove, {
+      battleId: args.battleId,
+      moveIndex,
     });
   },
 });
@@ -244,15 +279,19 @@ export const getBattle = query({
     const battle = await ctx.db.get(args.id);
     if (!battle) return null;
 
-    const [pokemon1, pokemon2] = await Promise.all([
-      ctx.db.get(battle.player1Pokemon),
-      ctx.db.get(battle.player2Pokemon),
+    const [pokemon1, pokemon2, player1Team, player2Team] = await Promise.all([
+      ctx.db.get(battle.player1ActivePokemon),
+      ctx.db.get(battle.player2ActivePokemon),
+      Promise.all(battle.player1Team.map(id => ctx.db.get(id))),
+      Promise.all(battle.player2Team.map(id => ctx.db.get(id))),
     ]);
 
     return {
       ...battle,
       pokemon1,
       pokemon2,
+      player1Team: player1Team.filter(Boolean),
+      player2Team: player2Team.filter(Boolean),
     };
   },
 });

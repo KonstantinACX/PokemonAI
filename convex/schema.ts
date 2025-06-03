@@ -24,12 +24,22 @@ export default defineSchema({
   }),
 
   battles: defineTable({
-    player1Pokemon: v.id("pokemon"),
-    player2Pokemon: v.id("pokemon"),
+    player1Team: v.array(v.id("pokemon")),
+    player2Team: v.array(v.id("pokemon")),
+    player1ActivePokemon: v.id("pokemon"),
+    player2ActivePokemon: v.id("pokemon"),
     currentTurn: v.union(v.literal("player1"), v.literal("player2")),
-    player1Hp: v.number(),
-    player2Hp: v.number(),
-    status: v.union(v.literal("active"), v.literal("player1_wins"), v.literal("player2_wins")),
+    player1ActiveHp: v.number(),
+    player2ActiveHp: v.number(),
+    player1FaintedPokemon: v.array(v.id("pokemon")),
+    player2FaintedPokemon: v.array(v.id("pokemon")),
+    status: v.union(
+      v.literal("active"), 
+      v.literal("player1_selecting"), 
+      v.literal("player2_selecting"),
+      v.literal("player1_wins"), 
+      v.literal("player2_wins")
+    ),
     battleLog: v.array(v.string()),
   }),
 });
