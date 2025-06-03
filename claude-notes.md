@@ -22,6 +22,8 @@
 - Added `performAIMove` mutation for automatic opponent turns
 - Integrated useEffect in battle component to trigger AI moves with 1.5s delay
 - Fixed BattleLink component to use proper TanStack Router Link
+- **NEW**: Removed authentication requirement - app now works without sign-in
+- **NEW**: Simplified layout with cleaner header and universal access
 - Verified full battle flow: player move → AI response → turn cycling
 
 ## Session Commits
