@@ -28,8 +28,10 @@
 - **Improved UI**: Vertical layout, authentication flows, visual enhancements
 - **Image Generation Reliability**: Multiple API fallbacks, retry logic, proper error handling
 - **Status Effect System**: Poison, burn, paralyze, freeze, sleep with proper battle mechanics
+- **Level System**: Added levels and XP to all Pokemon (all start at level 5) with UI display
 
 ## Session Commits (Latest)
+- 359a9a2: feat: Add levels and XP system to Pokemon
 - 9b115d9: feat: Add comprehensive status effect system
 - 8624538: fix: Add loading state and optimize Pokemon team generation
 - 73d6485: feat: Improve Pokemon image generation reliability
