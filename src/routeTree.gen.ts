@@ -11,10 +11,17 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as CatchImport } from './routes/catch'
 import { Route as IndexImport } from './routes/index'
 import { Route as BattleBattleIdImport } from './routes/battle.$battleId'
 
 // Create/Update Routes
+
+const CatchRoute = CatchImport.update({
+  id: '/catch',
+  path: '/catch',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const IndexRoute = IndexImport.update({
   id: '/',
@@ -39,6 +46,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/catch': {
+      id: '/catch'
+      path: '/catch'
+      fullPath: '/catch'
+      preLoaderRoute: typeof CatchImport
+      parentRoute: typeof rootRoute
+    }
     '/battle/$battleId': {
       id: '/battle/$battleId'
       path: '/battle/$battleId'
@@ -53,36 +67,41 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/catch': typeof CatchRoute
   '/battle/$battleId': typeof BattleBattleIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/catch': typeof CatchRoute
   '/battle/$battleId': typeof BattleBattleIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/catch': typeof CatchRoute
   '/battle/$battleId': typeof BattleBattleIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/battle/$battleId'
+  fullPaths: '/' | '/catch' | '/battle/$battleId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/battle/$battleId'
-  id: '__root__' | '/' | '/battle/$battleId'
+  to: '/' | '/catch' | '/battle/$battleId'
+  id: '__root__' | '/' | '/catch' | '/battle/$battleId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CatchRoute: typeof CatchRoute
   BattleBattleIdRoute: typeof BattleBattleIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CatchRoute: CatchRoute,
   BattleBattleIdRoute: BattleBattleIdRoute,
 }
 
@@ -97,11 +116,15 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/catch",
         "/battle/$battleId"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/catch": {
+      "filePath": "catch.tsx"
     },
     "/battle/$battleId": {
       "filePath": "battle.$battleId.tsx"

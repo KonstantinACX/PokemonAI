@@ -1,7 +1,7 @@
 import { useAction, useMutation, useQuery } from "convex/react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Swords, Sparkles, ImageIcon } from "lucide-react";
+import { Swords, Sparkles, ImageIcon, Search } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { getStatAdjective, getStatColor } from "../utils/pokemonStats";
@@ -57,18 +57,38 @@ function HomePage() {
 
       <div className="not-prose mt-8">
         {playerTeam.length === 0 ? (
-          <div className="card bg-base-200">
-            <div className="card-body">
-              <h2 className="card-title">Ready to Battle?</h2>
-              <p>Generate two teams of AI Pokemon and start battling!</p>
-              <div className="card-actions justify-center">
-                <button 
-                  className="btn btn-primary btn-lg gap-2"
-                  onClick={handleGenerateTeams}
-                >
-                  <Sparkles className="w-5 h-5" />
-                  Generate Teams
-                </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Battle Mode */}
+            <div className="card bg-base-200">
+              <div className="card-body">
+                <h2 className="card-title">Battle Mode</h2>
+                <p>Generate two teams of AI Pokemon and start battling!</p>
+                <div className="card-actions justify-center">
+                  <button 
+                    className="btn btn-primary btn-lg gap-2"
+                    onClick={handleGenerateTeams}
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    Generate Teams
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Catch Mode */}
+            <div className="card bg-base-200">
+              <div className="card-body">
+                <h2 className="card-title">Catch Mode</h2>
+                <p>Discover and catch wild AI-generated Pokemon!</p>
+                <div className="card-actions justify-center">
+                  <Link 
+                    to="/catch"
+                    className="btn btn-secondary btn-lg gap-2"
+                  >
+                    <Search className="w-5 h-5" />
+                    Start Catching
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
