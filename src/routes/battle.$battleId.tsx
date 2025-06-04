@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { ArrowLeft, Heart, Shield, Sword, Zap, ImageIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { getStatAdjective, getStatColor } from "../utils/pokemonStats";
@@ -25,30 +25,26 @@ function BattlePage() {
   const switchPokemon = useMutation(api.battles.switchPokemon);
   const [showSwitchOptions, setShowSwitchOptions] = useState(false);
 
-  if (!battle) {
-    return <div>Battle not found</div>;
-  }
-
-  const handleMove = async (moveIndex: number) => {
+  const handleMove = useCallback(async (moveIndex: number) => {
     await performMove({
       battleId: battleId as Id<"battles">,
       moveIndex,
     });
-  };
+  }, [performMove, battleId]);
 
-  const handleSwitchPokemon = async (pokemonId: Id<"pokemon">) => {
+  const handleSwitchPokemon = useCallback(async (pokemonId: Id<"pokemon">) => {
     await switchPokemon({
       battleId: battleId as Id<"battles">,
       pokemonId,
     });
-  };
+  }, [switchPokemon, battleId]);
 
-  const isPlayerTurn = battle.currentTurn === "player1";
-  const currentPokemon = isPlayerTurn ? battle.pokemon1 : battle.pokemon2;
-  const isGameOver = battle.status === "player1_wins" || battle.status === "player2_wins";
-  const isPlayerSelecting = battle.status === "player1_selecting";
-  const isOpponentSelecting = battle.status === "player2_selecting";
-  const isActive = battle.status === "active";
+  const isPlayerTurn = battle?.currentTurn === "player1";
+  const currentPokemon = isPlayerTurn ? battle?.pokemon1 : battle?.pokemon2;
+  const isGameOver = battle?.status === "player1_wins" || battle?.status === "player2_wins";
+  const isPlayerSelecting = battle?.status === "player1_selecting";
+  const isOpponentSelecting = battle?.status === "player2_selecting";
+  const isActive = battle?.status === "active";
 
   // Auto-trigger AI move when it's opponent's turn or AI needs to select Pokemon
   useEffect(() => {
@@ -64,16 +60,20 @@ function BattlePage() {
           );
           if (availablePokemon.length > 0) {
             const randomPokemon = availablePokemon[Math.floor(Math.random() * availablePokemon.length)];
-            handleSwitchPokemon(randomPokemon._id);
+            void handleSwitchPokemon(randomPokemon._id);
           }
         } else {
-          performAIMove({ battleId: battleId as Id<"battles"> });
+          void performAIMove({ battleId: battleId as Id<"battles"> });
         }
       }, 1500);
       
       return () => clearTimeout(timer);
     }
   }, [isPlayerTurn, isActive, isOpponentSelecting, performAIMove, battleId, battle, handleSwitchPokemon]);
+
+  if (!battle) {
+    return <div>Battle not found</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -125,10 +125,10 @@ function BattlePage() {
                         <button
                           key={pokemon._id}
                           className="btn btn-outline"
-                          onClick={() => handleSwitchPokemon(pokemon._id)}
+                          onClick={() => void handleSwitchPokemon(pokemon._id)}
                         >
                           <div className="text-center">
-                            <div className="font-bold text-sm">{pokemon.name}</div>
+                            <div className="font-bold text-sm">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level}</span></div>
                             <div className="flex gap-1 justify-center mb-1">
                               {pokemon.types.map((type: string) => (
                                 <span key={type} className="badge badge-primary badge-xs">
@@ -165,7 +165,7 @@ function BattlePage() {
                           <button
                             key={index}
                             className="btn btn-outline"
-                            onClick={() => handleMove(index)}
+                            onClick={() => void handleMove(index)}
                           >
                             <div className="text-left">
                               <div className="font-bold">{move.name}</div>
@@ -206,12 +206,12 @@ function BattlePage() {
                                       key={pokemon._id}
                                       className="btn btn-outline btn-sm"
                                       onClick={() => {
-                                        handleSwitchPokemon(pokemon._id);
+                                        void handleSwitchPokemon(pokemon._id);
                                         setShowSwitchOptions(false);
                                       }}
                                     >
                                       <div className="text-center">
-                                        <div className="font-bold text-xs">{pokemon.name}</div>
+                                        <div className="font-bold text-xs">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level}</span></div>
                                         <div className="flex gap-1 justify-center mb-1">
                                           {pokemon.types.map((type: string) => (
                                             <span key={type} className="badge badge-primary badge-xs">
@@ -288,7 +288,7 @@ function PokemonDisplay({
       <div className="card-body">
         <div className="card-title text-sm opacity-70">{label}</div>
         
-        <h3 className="text-lg font-bold">{pokemon.name}</h3>
+        <h3 className="text-lg font-bold">{pokemon.name} <span className="text-sm font-normal opacity-70">Lv.{pokemon.level}</span></h3>
         
         {/* Pokemon Image */}
         <PokemonImage 

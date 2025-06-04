@@ -201,6 +201,8 @@ function generateRandomPokemon() {
     speed: Math.floor(Math.random() * 60) + 40, // 40-100 Speed
     moves,
     description: `A mysterious ${types.join("/")} type Pokemon with incredible power.`,
+    level: 5, // All Pokemon start at level 5
+    xp: 0, // Starting XP
   };
 }
 
@@ -268,6 +270,8 @@ export const createPokemon = mutation({
     })),
     description: v.string(),
     imageUrl: v.optional(v.string()),
+    level: v.number(),
+    xp: v.number(),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("pokemon", args);

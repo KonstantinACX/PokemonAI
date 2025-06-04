@@ -139,7 +139,7 @@ function CatchPage() {
                 <p className="mb-4">Search for a wild Pokemon to encounter!</p>
                 <button 
                   className="btn btn-primary gap-2"
-                  onClick={handleFindPokemon}
+                  onClick={() => void handleFindPokemon()}
                 >
                   <Search className="w-4 h-4" />
                   Find Pokemon
@@ -167,7 +167,7 @@ function CatchPage() {
                 <div className="card-actions justify-center mt-6 gap-3">
                   <button 
                     className="btn btn-success gap-2"
-                    onClick={handleCatchPokemon}
+                    onClick={() => void handleCatchPokemon()}
                   >
                     <Sparkles className="w-4 h-4" />
                     Catch Pokemon
@@ -203,7 +203,7 @@ function CatchPage() {
                   <CaughtPokemonCard 
                     key={`${pokemonId}-${index}`} 
                     pokemonId={pokemonId} 
-                    onRelease={handleReleasePokemon}
+                    onRelease={(pokemonId) => void handleReleasePokemon(pokemonId)}
                   />
                 ))}
               </div>
@@ -219,7 +219,7 @@ function WildPokemonDisplay({ pokemon }: { pokemon: any }) {
   return (
     <div className="card bg-base-100">
       <div className="card-body">
-        <h3 className="text-lg font-bold text-center">{pokemon.name}</h3>
+        <h3 className="text-lg font-bold text-center">{pokemon.name} <span className="text-sm font-normal opacity-70">Lv.{pokemon.level}</span></h3>
         
         {/* Pokemon Image */}
         <PokemonImage 
@@ -298,7 +298,7 @@ function CaughtPokemonCard({ pokemonId, onRelease }: { pokemonId: Id<"pokemon">;
         <div className="flex items-center gap-3">
           <PokemonImageSmall imageUrl={pokemon.imageUrl} name={pokemon.name} />
           <div className="flex-1">
-            <div className="font-bold text-sm">{pokemon.name}</div>
+            <div className="font-bold text-sm">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level}</span></div>
             <div className="flex gap-1 mb-2">
               {pokemon.types.map((type: string) => (
                 <span key={type} className="badge badge-primary badge-xs">
@@ -335,7 +335,7 @@ function CaughtPokemonCard({ pokemonId, onRelease }: { pokemonId: Id<"pokemon">;
           </div>
           <button
             className="btn btn-ghost btn-sm btn-circle text-error hover:bg-error hover:text-error-content"
-            onClick={() => onRelease(pokemonId)}
+            onClick={() => void onRelease(pokemonId)}
             title="Release Pokemon"
           >
             <X className="w-4 h-4" />

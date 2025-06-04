@@ -54,7 +54,7 @@ function HomePage() {
         setBattleMode("collection");
         
         // Generate random team for opponent
-        generateTeam({}).then((team2) => {
+        void generateTeam({}).then((team2) => {
           setOpponentTeam(team2 as Id<"pokemon">[]);
           setSelectedPokemon(prev => ({ ...prev, opponent: team2[0] as Id<"pokemon"> }));
         });
@@ -111,7 +111,7 @@ function HomePage() {
     });
     
     // Navigate directly to the battle
-    navigate({ to: `/battle/${newBattleId}` });
+    void navigate({ to: `/battle/${newBattleId}` });
   };
 
   return (
@@ -128,7 +128,7 @@ function HomePage() {
             userCollection={userCollection}
             selectedPokemon={selectedCollectionPokemon}
             onTogglePokemon={handlePokemonSelectionToggle}
-            onConfirm={handleConfirmPokemonSelection}
+            onConfirm={() => void handleConfirmPokemonSelection()}
             onCancel={() => {
               setShowPokemonSelection(false);
               setBattleMode("random");
@@ -144,7 +144,7 @@ function HomePage() {
                 <div className="card-actions justify-center">
                   <button 
                     className="btn btn-primary btn-lg gap-2"
-                    onClick={handleGenerateTeams}
+                    onClick={() => void handleGenerateTeams()}
                     disabled={isGeneratingTeams}
                   >
                     {isGeneratingTeams ? (
@@ -243,7 +243,7 @@ function HomePage() {
               
               <button 
                 className="btn btn-primary"
-                onClick={handleStartBattle}
+                onClick={() => void handleStartBattle()}
                 disabled={!selectedPokemon.player || !selectedPokemon.opponent}
               >
                 <Swords className="w-4 h-4" />
@@ -315,7 +315,7 @@ function PokemonCard({
       onClick={onClick}
     >
       <div className="card-body p-3">
-        <div className="text-sm font-bold truncate">{pokemon.name}</div>
+        <div className="text-sm font-bold truncate">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level}</span></div>
         
         {/* Pokemon Image */}
         <PokemonImageSmall 
@@ -483,7 +483,7 @@ function SelectablePokemonCard({
       onClick={disabled ? undefined : onToggle}
     >
       <div className="card-body p-3">
-        <div className="font-bold text-sm truncate">{pokemon.name}</div>
+        <div className="font-bold text-sm truncate">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level}</span></div>
         
         {/* Pokemon Image */}
         <PokemonImageSmall 

@@ -52,6 +52,8 @@ export default defineSchema({
     })),
     description: v.string(),
     imageUrl: v.optional(v.string()), // URL to generated Pokemon image
+    level: v.number(), // Pokemon level (1-100)
+    xp: v.number(), // Current experience points
   }),
 
   battles: defineTable({

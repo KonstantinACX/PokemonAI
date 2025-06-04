@@ -140,7 +140,7 @@ export const performMove = mutation({
     // Check if attacker can move due to status effects
     const attackerStatusEffect = isPlayer1Turn ? battle.player1StatusEffect : battle.player2StatusEffect;
     let statusPreventedMove = false;
-    let statusLog: string[] = [];
+    const statusLog: string[] = [];
     
     if (attackerStatusEffect) {
       switch (attackerStatusEffect) {
@@ -154,7 +154,7 @@ export const performMove = mutation({
             statusLog.push(`${attacker.name} is frozen solid and can't move!`);
           }
           break;
-        case "sleep":
+        case "sleep": {
           const currentStatusTurns = isPlayer1Turn ? battle.player1StatusTurns : battle.player2StatusTurns;
           if (currentStatusTurns && currentStatusTurns <= 1) {
             statusLog.push(`${attacker.name} woke up!`);
@@ -164,6 +164,7 @@ export const performMove = mutation({
             statusLog.push(`${attacker.name} is fast asleep and can't move!`);
           }
           break;
+        }
         case "paralyze":
           // 25% chance to be fully paralyzed
           if (Math.random() < 0.25) {
@@ -217,7 +218,7 @@ export const performMove = mutation({
     else if (multiplier < 1 && multiplier > 0) effectiveness = " It's not very effective...";
     else if (multiplier === 0) effectiveness = " It has no effect!";
 
-    let newLog = move.power === 0 
+    const newLog = move.power === 0 
       ? [...battle.battleLog, `${attacker.name} used ${move.name}!`]
       : [...battle.battleLog, `${attacker.name} used ${move.name}! It dealt ${damage} damage.${effectiveness}`];
     
