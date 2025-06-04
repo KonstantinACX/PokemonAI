@@ -24,11 +24,20 @@ const typeChart: Record<string, { strong: string[], weak: string[], immune: stri
   Normal: { strong: [], weak: ["Fighting"], immune: ["Ghost"] },
 };
 
+function getStatMultiplier(stages: number): number {
+  // Pokemon stat stage multipliers: -6 to +6 stages
+  const multipliers = [0.25, 0.28, 0.33, 0.4, 0.5, 0.66, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+  const index = Math.max(0, Math.min(12, stages + 6));
+  return multipliers[index];
+}
+
 function calculateDamage(
   attackerMove: { power: number; type: string }, 
   attackerAttack: number,
   defenderDefense: number,
-  defenderTypes: string[]
+  defenderTypes: string[],
+  attackerStatMods?: { attack: number; defense: number; speed: number },
+  defenderStatMods?: { attack: number; defense: number; speed: number }
 ): number {
   let effectiveness = 1;
   
@@ -43,8 +52,12 @@ function calculateDamage(
     }
   }
 
+  // Apply stat modifications
+  const modifiedAttack = attackerAttack * getStatMultiplier(attackerStatMods?.attack || 0);
+  const modifiedDefense = defenderDefense * getStatMultiplier(defenderStatMods?.defense || 0);
+  
   // Basic damage formula: ((Attack / Defense) * MovePower * Effectiveness) / 10
-  const baseDamage = Math.floor(((attackerAttack / defenderDefense) * attackerMove.power * effectiveness) / 10);
+  const baseDamage = Math.floor(((modifiedAttack / modifiedDefense) * attackerMove.power * effectiveness) / 10);
   
   // Add some randomness (±20%)
   const variance = Math.random() * 0.4 - 0.2; // -20% to +20%
@@ -79,6 +92,8 @@ export const createBattle = mutation({
       player2ActiveHp: pokemon2.hp,
       player1FaintedPokemon: [],
       player2FaintedPokemon: [],
+      player1StatMods: { attack: 0, defense: 0, speed: 0 },
+      player2StatMods: { attack: 0, defense: 0, speed: 0 },
       status: "active",
       battleLog: [`Battle begins! ${pokemon1.name} vs ${pokemon2.name}`],
     });
@@ -128,7 +143,10 @@ export const performMove = mutation({
       return;
     }
 
-    const damage = calculateDamage(move, attacker.attack, defender.defense, defender.types);
+    const attackerStatMods = isPlayer1Turn ? battle.player1StatMods : battle.player2StatMods;
+    const defenderStatMods = isPlayer1Turn ? battle.player2StatMods : battle.player1StatMods;
+    
+    const damage = move.power === 0 ? 0 : calculateDamage(move, attacker.attack, defender.defense, defender.types, attackerStatMods, defenderStatMods);
     const newDefenderHp = Math.max(0, defenderHp - damage);
 
     let effectiveness = "";
@@ -148,7 +166,43 @@ export const performMove = mutation({
     else if (multiplier < 1 && multiplier > 0) effectiveness = " It's not very effective...";
     else if (multiplier === 0) effectiveness = " It has no effect!";
 
-    let newLog = [...battle.battleLog, `${attacker.name} used ${move.name}! It dealt ${damage} damage.${effectiveness}`];
+    let newLog = move.power === 0 
+      ? [...battle.battleLog, `${attacker.name} used ${move.name}!`]
+      : [...battle.battleLog, `${attacker.name} used ${move.name}! It dealt ${damage} damage.${effectiveness}`];
+    
+    // Handle stat modification effects
+    let updatedPlayer1StatMods = battle.player1StatMods || { attack: 0, defense: 0, speed: 0 };
+    let updatedPlayer2StatMods = battle.player2StatMods || { attack: 0, defense: 0, speed: 0 };
+    
+    if (move.effect && (move.effect.type === "stat_boost" || move.effect.type === "stat_reduction")) {
+      const targetIsPlayer1 = (move.effect.target === "self" && isPlayer1Turn) || (move.effect.target === "opponent" && !isPlayer1Turn);
+      const currentStatMods = targetIsPlayer1 ? updatedPlayer1StatMods : updatedPlayer2StatMods;
+      const targetPokemon = targetIsPlayer1 ? attacker : defender;
+      
+      const oldValue = currentStatMods[move.effect.stat];
+      const newValue = Math.max(-6, Math.min(6, oldValue + move.effect.stages));
+      
+      if (newValue !== oldValue) {
+        currentStatMods[move.effect.stat] = newValue;
+        
+        const statName = move.effect.stat.charAt(0).toUpperCase() + move.effect.stat.slice(1);
+        const changeDescription = move.effect.stages > 0 ? 
+          (move.effect.stages === 1 ? "rose" : move.effect.stages === 2 ? "rose sharply" : "rose drastically") :
+          (move.effect.stages === -1 ? "fell" : move.effect.stages === -2 ? "fell sharply" : "fell drastically");
+        
+        newLog.push(`${targetPokemon.name}'s ${statName} ${changeDescription}!`);
+      } else {
+        const statName = move.effect.stat.charAt(0).toUpperCase() + move.effect.stat.slice(1);
+        const limitDescription = move.effect.stages > 0 ? "can't go any higher" : "can't go any lower";
+        newLog.push(`${targetPokemon.name}'s ${statName} ${limitDescription}!`);
+      }
+      
+      if (targetIsPlayer1) {
+        updatedPlayer1StatMods = currentStatMods;
+      } else {
+        updatedPlayer2StatMods = currentStatMods;
+      }
+    }
 
     // Handle Pokemon fainting
     if (newDefenderHp === 0) {
@@ -174,6 +228,8 @@ export const performMove = mutation({
             ? { player2ActiveHp: newDefenderHp, player2FaintedPokemon: newFaintedList } 
             : { player1ActiveHp: newDefenderHp, player1FaintedPokemon: newFaintedList }
           ),
+          player1StatMods: updatedPlayer1StatMods,
+          player2StatMods: updatedPlayer2StatMods,
           status: newStatus,
           battleLog: newLog,
         });
@@ -186,6 +242,8 @@ export const performMove = mutation({
             ? { player2ActiveHp: newDefenderHp, player2FaintedPokemon: newFaintedList } 
             : { player1ActiveHp: newDefenderHp, player1FaintedPokemon: newFaintedList }
           ),
+          player1StatMods: updatedPlayer1StatMods,
+          player2StatMods: updatedPlayer2StatMods,
           status: newStatus,
           battleLog: newLog,
         });
@@ -197,6 +255,8 @@ export const performMove = mutation({
           ? { player2ActiveHp: newDefenderHp } 
           : { player1ActiveHp: newDefenderHp }
         ),
+        player1StatMods: updatedPlayer1StatMods,
+        player2StatMods: updatedPlayer2StatMods,
         currentTurn: isPlayer1Turn ? "player2" : "player1",
         battleLog: newLog,
       });
@@ -234,6 +294,7 @@ export const switchPokemon = mutation({
       await ctx.db.patch(args.battleId, {
         player1ActivePokemon: args.pokemonId,
         player1ActiveHp: pokemon.hp,
+        player1StatMods: { attack: 0, defense: 0, speed: 0 }, // Reset stat mods
         status: "active",
         currentTurn: "player1", // Player who just switched gets first turn
         battleLog: newLog,
@@ -242,6 +303,7 @@ export const switchPokemon = mutation({
       await ctx.db.patch(args.battleId, {
         player2ActivePokemon: args.pokemonId,
         player2ActiveHp: pokemon.hp,
+        player2StatMods: { attack: 0, defense: 0, speed: 0 }, // Reset stat mods
         status: "active", 
         currentTurn: "player2", // Player who just switched gets first turn
         battleLog: newLog,
@@ -251,6 +313,7 @@ export const switchPokemon = mutation({
       await ctx.db.patch(args.battleId, {
         player1ActivePokemon: args.pokemonId,
         player1ActiveHp: pokemon.hp,
+        player1StatMods: { attack: 0, defense: 0, speed: 0 }, // Reset stat mods
         currentTurn: "player2", // Switch ends player's turn
         battleLog: newLog,
       });

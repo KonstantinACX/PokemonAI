@@ -19,6 +19,22 @@ export default defineSchema({
       type: v.string(),
       power: v.number(),
       accuracy: v.number(),
+      effect: v.optional(v.object({
+        type: v.union(
+          v.literal("stat_boost"),
+          v.literal("stat_reduction")
+        ),
+        target: v.union(
+          v.literal("self"),
+          v.literal("opponent")
+        ),
+        stat: v.union(
+          v.literal("attack"),
+          v.literal("defense"), 
+          v.literal("speed")
+        ),
+        stages: v.number(), // -6 to +6
+      })),
     })),
     description: v.string(),
     imageUrl: v.optional(v.string()), // URL to generated Pokemon image
@@ -34,6 +50,17 @@ export default defineSchema({
     player2ActiveHp: v.number(),
     player1FaintedPokemon: v.array(v.id("pokemon")),
     player2FaintedPokemon: v.array(v.id("pokemon")),
+    // Stat modifications (stages from -6 to +6)
+    player1StatMods: v.optional(v.object({
+      attack: v.number(),
+      defense: v.number(),
+      speed: v.number(),
+    })),
+    player2StatMods: v.optional(v.object({
+      attack: v.number(),
+      defense: v.number(),
+      speed: v.number(),
+    })),
     status: v.union(
       v.literal("active"), 
       v.literal("player1_selecting"), 

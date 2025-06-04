@@ -159,7 +159,7 @@ function BattlePage() {
                             <div className="text-left">
                               <div className="font-bold">{move.name}</div>
                               <div className="text-xs opacity-70">
-                                {move.type} • {move.power} PWR
+                                {move.type} • {move.power === 0 ? "STATUS" : `${move.power} PWR`}
                               </div>
                             </div>
                           </button>
@@ -233,7 +233,7 @@ function BattlePage() {
           <div className="divider">Battle Log</div>
           
           <div className="bg-base-100 p-4 rounded-lg max-h-48 overflow-y-auto">
-            {battle.battleLog.map((log, index) => (
+            {battle.battleLog.slice().reverse().map((log, index) => (
               <div key={index} className="text-sm mb-1">
                 {log}
               </div>
@@ -334,7 +334,7 @@ function PokemonDisplay({
             {pokemon.moves.map((move: any, index: number) => (
               <div key={index} className="text-xs bg-base-200 p-1 rounded">
                 <span className="font-semibold">{move.name}</span>
-                <span className="opacity-70"> ({move.type}, {move.power} PWR)</span>
+                <span className="opacity-70"> ({move.type}, {move.power === 0 ? "STATUS" : `${move.power} PWR`})</span>
               </div>
             ))}
           </div>

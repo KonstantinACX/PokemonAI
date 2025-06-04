@@ -4,7 +4,18 @@ import { api } from "./_generated/api";
 
 const pokemonTypes = ["Fire", "Water", "Grass", "Electric", "Psychic", "Ice", "Dragon", "Fighting", "Flying", "Poison", "Ground", "Rock", "Bug", "Ghost", "Steel", "Dark", "Fairy", "Normal"];
 
-const movePool = [
+const movePool: Array<{
+  name: string;
+  type: string;
+  power: number;
+  accuracy: number;
+  effect?: {
+    type: "stat_boost" | "stat_reduction";
+    target: "self" | "opponent";
+    stat: "attack" | "defense" | "speed";
+    stages: number;
+  };
+}> = [
   // Fire moves (3)
   { name: "Flame Burst", type: "Fire", power: 70, accuracy: 100 },
   { name: "Flamethrower", type: "Fire", power: 90, accuracy: 100 },
@@ -94,6 +105,24 @@ const movePool = [
   { name: "Quick Attack", type: "Normal", power: 40, accuracy: 100 },
   { name: "Body Slam", type: "Normal", power: 85, accuracy: 100 },
   { name: "Hyper Beam", type: "Normal", power: 150, accuracy: 90 },
+  
+  // Stat-modifying moves
+  { name: "Swords Dance", type: "Normal", power: 0, accuracy: 100, 
+    effect: { type: "stat_boost", target: "self", stat: "attack", stages: 2 } },
+  { name: "Iron Defense", type: "Steel", power: 0, accuracy: 100,
+    effect: { type: "stat_boost", target: "self", stat: "defense", stages: 2 } },
+  { name: "Agility", type: "Psychic", power: 0, accuracy: 100,
+    effect: { type: "stat_boost", target: "self", stat: "speed", stages: 2 } },
+  { name: "Growl", type: "Normal", power: 0, accuracy: 100,
+    effect: { type: "stat_reduction", target: "opponent", stat: "attack", stages: -1 } },
+  { name: "Leer", type: "Normal", power: 0, accuracy: 100,
+    effect: { type: "stat_reduction", target: "opponent", stat: "defense", stages: -1 } },
+  { name: "String Shot", type: "Bug", power: 0, accuracy: 95,
+    effect: { type: "stat_reduction", target: "opponent", stat: "speed", stages: -1 } },
+  { name: "Work Up", type: "Normal", power: 0, accuracy: 100,
+    effect: { type: "stat_boost", target: "self", stat: "attack", stages: 1 } },
+  { name: "Harden", type: "Normal", power: 0, accuracy: 100,
+    effect: { type: "stat_boost", target: "self", stat: "defense", stages: 1 } },
 ];
 
 const nameRoots = [
@@ -226,6 +255,22 @@ export const createPokemon = mutation({
       type: v.string(),
       power: v.number(),
       accuracy: v.number(),
+      effect: v.optional(v.object({
+        type: v.union(
+          v.literal("stat_boost"),
+          v.literal("stat_reduction")
+        ),
+        target: v.union(
+          v.literal("self"),
+          v.literal("opponent")
+        ),
+        stat: v.union(
+          v.literal("attack"),
+          v.literal("defense"), 
+          v.literal("speed")
+        ),
+        stages: v.number(),
+      })),
     })),
     description: v.string(),
     imageUrl: v.optional(v.string()),
