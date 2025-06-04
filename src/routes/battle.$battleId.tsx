@@ -95,12 +95,14 @@ function BattlePage() {
               currentHp={battle.player1ActiveHp}
               isActive={isPlayerTurn}
               label="Your Pokemon"
+              statusEffect={battle.player1StatusEffect}
             />
             <PokemonDisplay
               pokemon={battle.pokemon2}
               currentHp={battle.player2ActiveHp}
               isActive={!isPlayerTurn}
               label="Opponent"
+              statusEffect={battle.player2StatusEffect}
             />
           </div>
 
@@ -263,12 +265,14 @@ function PokemonDisplay({
   pokemon, 
   currentHp, 
   isActive, 
-  label 
+  label,
+  statusEffect
 }: {
   pokemon: any;
   currentHp: number;
   isActive: boolean;
   label: string;
+  statusEffect?: string;
 }) {
   if (!pokemon) return null;
 
@@ -295,6 +299,13 @@ function PokemonDisplay({
             </span>
           ))}
         </div>
+
+        {/* Status Effect Display */}
+        {statusEffect && (
+          <div className="mb-3">
+            <StatusEffectBadge statusEffect={statusEffect} />
+          </div>
+        )}
 
         <div className="space-y-2">
           <div>
@@ -399,6 +410,26 @@ function PokemonImage({ imageUrl, name }: { imageUrl?: string; name: string }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function StatusEffectBadge({ statusEffect }: { statusEffect: string }) {
+  const statusConfig: Record<string, { color: string; icon: string; name: string }> = {
+    poison: { color: "badge-error", icon: "☠️", name: "Poisoned" },
+    burn: { color: "badge-warning", icon: "🔥", name: "Burned" },
+    paralyze: { color: "badge-info", icon: "⚡", name: "Paralyzed" },
+    freeze: { color: "badge-accent", icon: "❄️", name: "Frozen" },
+    sleep: { color: "badge-neutral", icon: "💤", name: "Asleep" },
+  };
+
+  const config = statusConfig[statusEffect];
+  if (!config) return null;
+
+  return (
+    <div className={`badge ${config.color} badge-sm gap-1`}>
+      <span>{config.icon}</span>
+      <span>{config.name}</span>
     </div>
   );
 }

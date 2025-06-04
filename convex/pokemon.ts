@@ -10,16 +10,21 @@ const movePool: Array<{
   power: number;
   accuracy: number;
   effect?: {
-    type: "stat_boost" | "stat_reduction";
+    type: "stat_boost" | "stat_reduction" | "status_effect";
     target: "self" | "opponent";
-    stat: "attack" | "defense" | "speed";
-    stages: number;
+    stat?: "attack" | "defense" | "speed";
+    stages?: number;
+    statusEffect?: "poison" | "burn" | "paralyze" | "freeze" | "sleep";
+    chance?: number;
   };
 }> = [
   // Fire moves (3)
-  { name: "Flame Burst", type: "Fire", power: 70, accuracy: 100 },
-  { name: "Flamethrower", type: "Fire", power: 90, accuracy: 100 },
-  { name: "Fire Blast", type: "Fire", power: 110, accuracy: 85 },
+  { name: "Flame Burst", type: "Fire", power: 70, accuracy: 100,
+    effect: { type: "status_effect", target: "opponent", statusEffect: "burn", chance: 10 } },
+  { name: "Flamethrower", type: "Fire", power: 90, accuracy: 100,
+    effect: { type: "status_effect", target: "opponent", statusEffect: "burn", chance: 10 } },
+  { name: "Will-O-Wisp", type: "Fire", power: 0, accuracy: 85,
+    effect: { type: "status_effect", target: "opponent", statusEffect: "burn", chance: 100 } },
   
   // Water moves (3)
   { name: "Hydro Pump", type: "Water", power: 110, accuracy: 80 },
@@ -32,18 +37,24 @@ const movePool: Array<{
   { name: "Leaf Blade", type: "Grass", power: 90, accuracy: 100 },
   
   // Electric moves (3)
-  { name: "Thunder", type: "Electric", power: 110, accuracy: 70 },
-  { name: "Thunderbolt", type: "Electric", power: 90, accuracy: 100 },
-  { name: "Thunder Shock", type: "Electric", power: 40, accuracy: 100 },
+  { name: "Thunder", type: "Electric", power: 110, accuracy: 70,
+    effect: { type: "status_effect", target: "opponent", statusEffect: "paralyze", chance: 30 } },
+  { name: "Thunderbolt", type: "Electric", power: 90, accuracy: 100,
+    effect: { type: "status_effect", target: "opponent", statusEffect: "paralyze", chance: 10 } },
+  { name: "Thunder Wave", type: "Electric", power: 0, accuracy: 90,
+    effect: { type: "status_effect", target: "opponent", statusEffect: "paralyze", chance: 100 } },
   
   // Psychic moves (3)
   { name: "Psychic", type: "Psychic", power: 90, accuracy: 100 },
   { name: "Psybeam", type: "Psychic", power: 65, accuracy: 100 },
-  { name: "Future Sight", type: "Psychic", power: 100, accuracy: 100 },
+  { name: "Hypnosis", type: "Psychic", power: 0, accuracy: 60,
+    effect: { type: "status_effect", target: "opponent", statusEffect: "sleep", chance: 100 } },
   
   // Ice moves (3)
-  { name: "Ice Beam", type: "Ice", power: 90, accuracy: 100 },
-  { name: "Blizzard", type: "Ice", power: 110, accuracy: 70 },
+  { name: "Ice Beam", type: "Ice", power: 90, accuracy: 100,
+    effect: { type: "status_effect", target: "opponent", statusEffect: "freeze", chance: 10 } },
+  { name: "Blizzard", type: "Ice", power: 110, accuracy: 70,
+    effect: { type: "status_effect", target: "opponent", statusEffect: "freeze", chance: 10 } },
   { name: "Ice Shard", type: "Ice", power: 40, accuracy: 100 },
   
   // Dragon moves (3)
@@ -62,9 +73,12 @@ const movePool: Array<{
   { name: "Wing Attack", type: "Flying", power: 60, accuracy: 100 },
   
   // Poison moves (3)
-  { name: "Sludge Bomb", type: "Poison", power: 90, accuracy: 100 },
-  { name: "Poison Jab", type: "Poison", power: 80, accuracy: 100 },
-  { name: "Toxic Spikes", type: "Poison", power: 45, accuracy: 100 },
+  { name: "Sludge Bomb", type: "Poison", power: 90, accuracy: 100, 
+    effect: { type: "status_effect", target: "opponent", statusEffect: "poison", chance: 30 } },
+  { name: "Poison Jab", type: "Poison", power: 80, accuracy: 100,
+    effect: { type: "status_effect", target: "opponent", statusEffect: "poison", chance: 30 } },
+  { name: "Toxic", type: "Poison", power: 0, accuracy: 90,
+    effect: { type: "status_effect", target: "opponent", statusEffect: "poison", chance: 100 } },
   
   // Ground moves (3)
   { name: "Earthquake", type: "Ground", power: 100, accuracy: 100 },
@@ -229,18 +243,27 @@ export const createPokemon = mutation({
       effect: v.optional(v.object({
         type: v.union(
           v.literal("stat_boost"),
-          v.literal("stat_reduction")
+          v.literal("stat_reduction"),
+          v.literal("status_effect")
         ),
         target: v.union(
           v.literal("self"),
           v.literal("opponent")
         ),
-        stat: v.union(
+        stat: v.optional(v.union(
           v.literal("attack"),
           v.literal("defense"), 
           v.literal("speed")
-        ),
-        stages: v.number(),
+        )),
+        stages: v.optional(v.number()),
+        statusEffect: v.optional(v.union(
+          v.literal("poison"),
+          v.literal("burn"),
+          v.literal("paralyze"),
+          v.literal("freeze"),
+          v.literal("sleep")
+        )),
+        chance: v.optional(v.number()),
       })),
     })),
     description: v.string(),

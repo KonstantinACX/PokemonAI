@@ -27,18 +27,27 @@ export default defineSchema({
       effect: v.optional(v.object({
         type: v.union(
           v.literal("stat_boost"),
-          v.literal("stat_reduction")
+          v.literal("stat_reduction"),
+          v.literal("status_effect")
         ),
         target: v.union(
           v.literal("self"),
           v.literal("opponent")
         ),
-        stat: v.union(
+        stat: v.optional(v.union(
           v.literal("attack"),
           v.literal("defense"), 
           v.literal("speed")
-        ),
-        stages: v.number(), // -6 to +6
+        )),
+        stages: v.optional(v.number()), // -6 to +6
+        statusEffect: v.optional(v.union(
+          v.literal("poison"),
+          v.literal("burn"),
+          v.literal("paralyze"),
+          v.literal("freeze"),
+          v.literal("sleep")
+        )),
+        chance: v.optional(v.number()), // Chance to inflict status (0-100)
       })),
     })),
     description: v.string(),
@@ -66,6 +75,23 @@ export default defineSchema({
       defense: v.number(),
       speed: v.number(),
     })),
+    // Status effects for active Pokemon
+    player1StatusEffect: v.optional(v.union(
+      v.literal("poison"),
+      v.literal("burn"),
+      v.literal("paralyze"),
+      v.literal("freeze"),
+      v.literal("sleep")
+    )),
+    player2StatusEffect: v.optional(v.union(
+      v.literal("poison"),
+      v.literal("burn"),
+      v.literal("paralyze"),
+      v.literal("freeze"),
+      v.literal("sleep")
+    )),
+    player1StatusTurns: v.optional(v.number()), // Turns remaining for status
+    player2StatusTurns: v.optional(v.number()),
     status: v.union(
       v.literal("active"), 
       v.literal("player1_selecting"), 

@@ -86,18 +86,27 @@ export const generatePokemonWithImageAction = action({
       effect: v.optional(v.object({
         type: v.union(
           v.literal("stat_boost"),
-          v.literal("stat_reduction")
+          v.literal("stat_reduction"),
+          v.literal("status_effect")
         ),
         target: v.union(
           v.literal("self"),
           v.literal("opponent")
         ),
-        stat: v.union(
+        stat: v.optional(v.union(
           v.literal("attack"),
           v.literal("defense"), 
           v.literal("speed")
-        ),
-        stages: v.number(),
+        )),
+        stages: v.optional(v.number()),
+        statusEffect: v.optional(v.union(
+          v.literal("poison"),
+          v.literal("burn"),
+          v.literal("paralyze"),
+          v.literal("freeze"),
+          v.literal("sleep")
+        )),
+        chance: v.optional(v.number()),
       })),
     })),
     description: v.string(),

@@ -37,7 +37,8 @@ function calculateDamage(
   defenderDefense: number,
   defenderTypes: string[],
   attackerStatMods?: { attack: number; defense: number; speed: number },
-  defenderStatMods?: { attack: number; defense: number; speed: number }
+  defenderStatMods?: { attack: number; defense: number; speed: number },
+  attackerStatusEffect?: string
 ): number {
   let effectiveness = 1;
   
@@ -53,8 +54,13 @@ function calculateDamage(
   }
 
   // Apply stat modifications
-  const modifiedAttack = attackerAttack * getStatMultiplier(attackerStatMods?.attack || 0);
+  let modifiedAttack = attackerAttack * getStatMultiplier(attackerStatMods?.attack || 0);
   const modifiedDefense = defenderDefense * getStatMultiplier(defenderStatMods?.defense || 0);
+  
+  // Apply status effect penalties
+  if (attackerStatusEffect === "burn") {
+    modifiedAttack *= 0.5; // Burn halves attack
+  }
   
   // Basic damage formula: ((Attack / Defense) * MovePower * Effectiveness) / 5 (doubled from /10)
   const baseDamage = Math.floor(((modifiedAttack / modifiedDefense) * attackerMove.power * effectiveness) / 5);
@@ -132,6 +138,52 @@ export const performMove = mutation({
 
     const move = attacker.moves[args.moveIndex];
     
+    // Check if attacker can move due to status effects
+    const attackerStatusEffect = isPlayer1Turn ? battle.player1StatusEffect : battle.player2StatusEffect;
+    let statusPreventedMove = false;
+    let statusLog: string[] = [];
+    
+    if (attackerStatusEffect) {
+      switch (attackerStatusEffect) {
+        case "freeze":
+          // 20% chance to thaw out each turn
+          if (Math.random() < 0.2) {
+            statusLog.push(`${attacker.name} thawed out!`);
+            // Will clear status effect at end of function
+          } else {
+            statusPreventedMove = true;
+            statusLog.push(`${attacker.name} is frozen solid and can't move!`);
+          }
+          break;
+        case "sleep":
+          const currentStatusTurns = isPlayer1Turn ? battle.player1StatusTurns : battle.player2StatusTurns;
+          if (currentStatusTurns && currentStatusTurns <= 1) {
+            statusLog.push(`${attacker.name} woke up!`);
+            // Will clear status effect at end of function
+          } else {
+            statusPreventedMove = true;
+            statusLog.push(`${attacker.name} is fast asleep and can't move!`);
+          }
+          break;
+        case "paralyze":
+          // 25% chance to be fully paralyzed
+          if (Math.random() < 0.25) {
+            statusPreventedMove = true;
+            statusLog.push(`${attacker.name} is paralyzed and can't move!`);
+          }
+          break;
+      }
+    }
+    
+    if (statusPreventedMove) {
+      const newLog = [...battle.battleLog, ...statusLog];
+      await ctx.db.patch(args.battleId, {
+        currentTurn: isPlayer1Turn ? "player2" : "player1",
+        battleLog: newLog,
+      });
+      return;
+    }
+    
     // Check accuracy
     const hitChance = Math.random() * 100;
     if (hitChance > move.accuracy) {
@@ -146,7 +198,7 @@ export const performMove = mutation({
     const attackerStatMods = isPlayer1Turn ? battle.player1StatMods : battle.player2StatMods;
     const defenderStatMods = isPlayer1Turn ? battle.player2StatMods : battle.player1StatMods;
     
-    const damage = move.power === 0 ? 0 : calculateDamage(move, attacker.attack, defender.defense, defender.types, attackerStatMods, defenderStatMods);
+    const damage = move.power === 0 ? 0 : calculateDamage(move, attacker.attack, defender.defense, defender.types, attackerStatMods, defenderStatMods, attackerStatusEffect);
     const newDefenderHp = Math.max(0, defenderHp - damage);
 
     let effectiveness = "";
@@ -174,33 +226,92 @@ export const performMove = mutation({
     let updatedPlayer1StatMods = battle.player1StatMods || { attack: 0, defense: 0, speed: 0 };
     let updatedPlayer2StatMods = battle.player2StatMods || { attack: 0, defense: 0, speed: 0 };
     
-    if (move.effect && (move.effect.type === "stat_boost" || move.effect.type === "stat_reduction")) {
+    if (move.effect && (move.effect.type === "stat_boost" || move.effect.type === "stat_reduction") && move.effect.stat && move.effect.stages !== undefined) {
       const targetIsPlayer1 = (move.effect.target === "self" && isPlayer1Turn) || (move.effect.target === "opponent" && !isPlayer1Turn);
       const currentStatMods = targetIsPlayer1 ? updatedPlayer1StatMods : updatedPlayer2StatMods;
       const targetPokemon = targetIsPlayer1 ? attacker : defender;
       
-      const oldValue = currentStatMods[move.effect.stat];
-      const newValue = Math.max(-6, Math.min(6, oldValue + move.effect.stages));
+      const statName = move.effect.stat;
+      const stageChange = move.effect.stages;
+      
+      const oldValue = currentStatMods[statName];
+      const newValue = Math.max(-6, Math.min(6, oldValue + stageChange));
       
       if (newValue !== oldValue) {
-        currentStatMods[move.effect.stat] = newValue;
+        currentStatMods[statName] = newValue;
         
-        const statName = move.effect.stat.charAt(0).toUpperCase() + move.effect.stat.slice(1);
-        const changeDescription = move.effect.stages > 0 ? 
-          (move.effect.stages === 1 ? "rose" : move.effect.stages === 2 ? "rose sharply" : "rose drastically") :
-          (move.effect.stages === -1 ? "fell" : move.effect.stages === -2 ? "fell sharply" : "fell drastically");
+        const displayStatName = statName.charAt(0).toUpperCase() + statName.slice(1);
+        const changeDescription = stageChange > 0 ? 
+          (stageChange === 1 ? "rose" : stageChange === 2 ? "rose sharply" : "rose drastically") :
+          (stageChange === -1 ? "fell" : stageChange === -2 ? "fell sharply" : "fell drastically");
         
-        newLog.push(`${targetPokemon.name}'s ${statName} ${changeDescription}!`);
+        newLog.push(`${targetPokemon.name}'s ${displayStatName} ${changeDescription}!`);
       } else {
-        const statName = move.effect.stat.charAt(0).toUpperCase() + move.effect.stat.slice(1);
-        const limitDescription = move.effect.stages > 0 ? "can't go any higher" : "can't go any lower";
-        newLog.push(`${targetPokemon.name}'s ${statName} ${limitDescription}!`);
+        const displayStatName = statName.charAt(0).toUpperCase() + statName.slice(1);
+        const limitDescription = stageChange > 0 ? "can't go any higher" : "can't go any lower";
+        newLog.push(`${targetPokemon.name}'s ${displayStatName} ${limitDescription}!`);
       }
       
       if (targetIsPlayer1) {
         updatedPlayer1StatMods = currentStatMods;
       } else {
         updatedPlayer2StatMods = currentStatMods;
+      }
+    }
+
+    // Handle status effect infliction
+    let updatedPlayer1StatusEffect = battle.player1StatusEffect;
+    let updatedPlayer2StatusEffect = battle.player2StatusEffect;
+    let updatedPlayer1StatusTurns = battle.player1StatusTurns;
+    let updatedPlayer2StatusTurns = battle.player2StatusTurns;
+    
+    if (move.effect && move.effect.type === "status_effect" && move.effect.statusEffect && move.effect.chance) {
+      const targetIsPlayer1 = (move.effect.target === "self" && isPlayer1Turn) || (move.effect.target === "opponent" && !isPlayer1Turn);
+      const targetPokemon = targetIsPlayer1 ? attacker : defender;
+      const currentStatusEffect = targetIsPlayer1 ? battle.player1StatusEffect : battle.player2StatusEffect;
+      
+      // Only inflict status if target doesn't already have one (no status stacking)
+      if (!currentStatusEffect) {
+        const statusChance = Math.random() * 100;
+        if (statusChance <= move.effect.chance) {
+          const statusName = move.effect.statusEffect;
+          
+          // Set status duration based on type
+          let statusTurns = 0;
+          switch (statusName) {
+            case "poison":
+            case "burn":
+              statusTurns = -1; // Lasts until switched/cured
+              break;
+            case "paralyze":
+              statusTurns = -1; // Permanent until cured
+              break;
+            case "freeze":
+              statusTurns = Math.floor(Math.random() * 3) + 2; // 2-4 turns
+              break;
+            case "sleep":
+              statusTurns = Math.floor(Math.random() * 3) + 1; // 1-3 turns
+              break;
+          }
+          
+          if (targetIsPlayer1) {
+            updatedPlayer1StatusEffect = statusName;
+            updatedPlayer1StatusTurns = statusTurns;
+          } else {
+            updatedPlayer2StatusEffect = statusName;
+            updatedPlayer2StatusTurns = statusTurns;
+          }
+          
+          const statusMessages: Record<string, string> = {
+            poison: "was poisoned",
+            burn: "was burned",
+            paralyze: "was paralyzed",
+            freeze: "was frozen solid",
+            sleep: "fell asleep"
+          };
+          
+          newLog.push(`${targetPokemon.name} ${statusMessages[statusName]}!`);
+        }
       }
     }
 
@@ -230,6 +341,10 @@ export const performMove = mutation({
           ),
           player1StatMods: updatedPlayer1StatMods,
           player2StatMods: updatedPlayer2StatMods,
+          player1StatusEffect: updatedPlayer1StatusEffect,
+          player2StatusEffect: updatedPlayer2StatusEffect,
+          player1StatusTurns: updatedPlayer1StatusTurns,
+          player2StatusTurns: updatedPlayer2StatusTurns,
           status: newStatus,
           battleLog: newLog,
         });
@@ -244,19 +359,71 @@ export const performMove = mutation({
           ),
           player1StatMods: updatedPlayer1StatMods,
           player2StatMods: updatedPlayer2StatMods,
+          player1StatusEffect: updatedPlayer1StatusEffect,
+          player2StatusEffect: updatedPlayer2StatusEffect,
+          player1StatusTurns: updatedPlayer1StatusTurns,
+          player2StatusTurns: updatedPlayer2StatusTurns,
           status: newStatus,
           battleLog: newLog,
         });
       }
     } else {
+      // Process end-of-turn status effects (poison, burn, status countdown)
+      let finalPlayer1Hp = isPlayer1Turn ? attackerHp : newDefenderHp;
+      let finalPlayer2Hp = isPlayer1Turn ? newDefenderHp : attackerHp;
+      
+      // Handle poison/burn damage
+      if (updatedPlayer1StatusEffect === "poison" || updatedPlayer1StatusEffect === "burn") {
+        const statusDamage = Math.max(1, Math.floor(pokemon1.hp / 16)); // 1/16 of max HP
+        finalPlayer1Hp = Math.max(0, finalPlayer1Hp - statusDamage);
+        const statusName = updatedPlayer1StatusEffect === "poison" ? "poison" : "burn";
+        newLog.push(`${pokemon1.name} is hurt by its ${statusName}! (${statusDamage} damage)`);
+      }
+      
+      if (updatedPlayer2StatusEffect === "poison" || updatedPlayer2StatusEffect === "burn") {
+        const statusDamage = Math.max(1, Math.floor(pokemon2.hp / 16)); // 1/16 of max HP
+        finalPlayer2Hp = Math.max(0, finalPlayer2Hp - statusDamage);
+        const statusName = updatedPlayer2StatusEffect === "poison" ? "poison" : "burn";
+        newLog.push(`${pokemon2.name} is hurt by its ${statusName}! (${statusDamage} damage)`);
+      }
+      
+      // Update status turn counters and clear expired statuses
+      if (updatedPlayer1StatusTurns && updatedPlayer1StatusTurns > 0) {
+        updatedPlayer1StatusTurns -= 1;
+        if (updatedPlayer1StatusTurns <= 0) {
+          if (updatedPlayer1StatusEffect === "sleep") {
+            newLog.push(`${pokemon1.name} woke up!`);
+          } else if (updatedPlayer1StatusEffect === "freeze") {
+            newLog.push(`${pokemon1.name} thawed out!`);
+          }
+          updatedPlayer1StatusEffect = undefined;
+          updatedPlayer1StatusTurns = undefined;
+        }
+      }
+      
+      if (updatedPlayer2StatusTurns && updatedPlayer2StatusTurns > 0) {
+        updatedPlayer2StatusTurns -= 1;
+        if (updatedPlayer2StatusTurns <= 0) {
+          if (updatedPlayer2StatusEffect === "sleep") {
+            newLog.push(`${pokemon2.name} woke up!`);
+          } else if (updatedPlayer2StatusEffect === "freeze") {
+            newLog.push(`${pokemon2.name} thawed out!`);
+          }
+          updatedPlayer2StatusEffect = undefined;
+          updatedPlayer2StatusTurns = undefined;
+        }
+      }
+      
       // Pokemon survives - continue battle
       await ctx.db.patch(args.battleId, {
-        ...(isPlayer1Turn 
-          ? { player2ActiveHp: newDefenderHp } 
-          : { player1ActiveHp: newDefenderHp }
-        ),
+        player1ActiveHp: finalPlayer1Hp,
+        player2ActiveHp: finalPlayer2Hp,
         player1StatMods: updatedPlayer1StatMods,
         player2StatMods: updatedPlayer2StatMods,
+        player1StatusEffect: updatedPlayer1StatusEffect,
+        player2StatusEffect: updatedPlayer2StatusEffect,
+        player1StatusTurns: updatedPlayer1StatusTurns,
+        player2StatusTurns: updatedPlayer2StatusTurns,
         currentTurn: isPlayer1Turn ? "player2" : "player1",
         battleLog: newLog,
       });
@@ -295,6 +462,8 @@ export const switchPokemon = mutation({
         player1ActivePokemon: args.pokemonId,
         player1ActiveHp: pokemon.hp,
         player1StatMods: { attack: 0, defense: 0, speed: 0 }, // Reset stat mods
+        player1StatusEffect: undefined, // Clear status effects
+        player1StatusTurns: undefined,
         status: "active",
         currentTurn: "player1", // Player who just switched gets first turn
         battleLog: newLog,
@@ -304,6 +473,8 @@ export const switchPokemon = mutation({
         player2ActivePokemon: args.pokemonId,
         player2ActiveHp: pokemon.hp,
         player2StatMods: { attack: 0, defense: 0, speed: 0 }, // Reset stat mods
+        player2StatusEffect: undefined, // Clear status effects
+        player2StatusTurns: undefined,
         status: "active", 
         currentTurn: "player2", // Player who just switched gets first turn
         battleLog: newLog,
@@ -314,6 +485,8 @@ export const switchPokemon = mutation({
         player1ActivePokemon: args.pokemonId,
         player1ActiveHp: pokemon.hp,
         player1StatMods: { attack: 0, defense: 0, speed: 0 }, // Reset stat mods
+        player1StatusEffect: undefined, // Clear status effects
+        player1StatusTurns: undefined,
         currentTurn: "player2", // Switch ends player's turn
         battleLog: newLog,
       });
