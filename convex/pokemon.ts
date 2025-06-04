@@ -18,6 +18,10 @@ const movePool = [
   { name: "Rock Slide", type: "Rock", power: 75, accuracy: 90 },
   { name: "Quick Attack", type: "Normal", power: 40, accuracy: 100 },
   { name: "Shadow Ball", type: "Ghost", power: 80, accuracy: 100 },
+  { name: "Bug Bite", type: "Bug", power: 60, accuracy: 100 },
+  { name: "Steel Wing", type: "Steel", power: 70, accuracy: 90 },
+  { name: "Dark Pulse", type: "Dark", power: 80, accuracy: 100 },
+  { name: "Moonblast", type: "Fairy", power: 95, accuracy: 100 },
 ];
 
 const nameRoots = [
@@ -46,18 +50,27 @@ function generateRandomPokemon() {
     ? [primaryType, pokemonTypes.filter(t => t !== primaryType)[Math.floor(Math.random() * (pokemonTypes.length - 1))]]
     : [primaryType];
 
-  // Generate moves (2-4 moves, at least one of primary type)
+  // Generate moves (2-4 moves, at least one matching Pokemon's type)
   const numMoves = Math.floor(Math.random() * 3) + 2;
   const typeMoves = movePool.filter(m => types.includes(m.type));
   const otherMoves = movePool.filter(m => !types.includes(m.type));
   
   const moves = [];
+  
+  // GUARANTEE at least one move matches the Pokemon's type(s)
   if (typeMoves.length > 0) {
     moves.push(typeMoves[Math.floor(Math.random() * typeMoves.length)]);
+  } else {
+    // Fallback: if no moves match the type, add a Normal move
+    const normalMoves = movePool.filter(m => m.type === "Normal");
+    if (normalMoves.length > 0) {
+      moves.push(normalMoves[Math.floor(Math.random() * normalMoves.length)]);
+    }
   }
   
+  // Fill remaining slots with other moves
   while (moves.length < numMoves) {
-    const availableMoves: typeof movePool = moves.length === 1 ? [...typeMoves, ...otherMoves] : otherMoves;
+    const availableMoves = [...typeMoves, ...otherMoves];
     const move = availableMoves[Math.floor(Math.random() * availableMoves.length)];
     if (!moves.find(m => m.name === move.name)) {
       moves.push(move);
