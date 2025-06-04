@@ -1,5 +1,5 @@
 import { useAction, useMutation, useQuery } from "convex/react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Swords, Sparkles, ImageIcon } from "lucide-react";
 import { api } from "../../convex/_generated/api";
@@ -17,8 +17,8 @@ function HomePage() {
     player: null,
     opponent: null,
   });
-  const [battleId, setBattleId] = useState<Id<"battles"> | null>(null);
 
+  const navigate = useNavigate();
   const generateTeam = useAction(api.pokemon.generateTeam);
   const createBattle = useMutation(api.battles.createBattle);
 
@@ -31,7 +31,6 @@ function HomePage() {
     setPlayerTeam(team1);
     setOpponentTeam(team2);
     setSelectedPokemon({ player: team1[0], opponent: team2[0] });
-    setBattleId(null);
   };
 
   const handleStartBattle = async () => {
@@ -43,7 +42,9 @@ function HomePage() {
       player1Pokemon: selectedPokemon.player,
       player2Pokemon: selectedPokemon.opponent,
     });
-    setBattleId(newBattleId);
+    
+    // Navigate directly to the battle
+    navigate({ to: `/battle/${newBattleId}` });
   };
 
   return (
@@ -96,18 +97,14 @@ function HomePage() {
                 New Teams
               </button>
               
-              {battleId ? (
-                <BattleLink battleId={battleId} />
-              ) : (
-                <button 
-                  className="btn btn-primary"
-                  onClick={handleStartBattle}
-                  disabled={!selectedPokemon.player || !selectedPokemon.opponent}
-                >
-                  <Swords className="w-4 h-4" />
-                  Start Battle
-                </button>
-              )}
+              <button 
+                className="btn btn-primary"
+                onClick={handleStartBattle}
+                disabled={!selectedPokemon.player || !selectedPokemon.opponent}
+              >
+                <Swords className="w-4 h-4" />
+                Start Battle
+              </button>
             </div>
           </div>
         )}
@@ -204,19 +201,6 @@ function PokemonCard({
     </div>
   );
 }
-
-function BattleLink({ battleId }: { battleId: Id<"battles"> }) {
-  return (
-    <Link 
-      to={`/battle/${battleId}`}
-      className="btn btn-success"
-    >
-      <Swords className="w-4 h-4" />
-      Enter Battle
-    </Link>
-  );
-}
-
 
 function PokemonImageSmall({ imageUrl, name }: { imageUrl?: string; name: string }) {
   const [isLoading, setIsLoading] = useState(true);

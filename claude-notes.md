@@ -29,7 +29,8 @@
 ## Session Commits
 - 76b4971: Document Pokemon battle simulator app requirements  
 - e91c228: Implement Pokemon battle simulator MVP
-- **NEW**: feat: Add stat-modifying moves to battle system
+- 62aa001: feat: Add stat-modifying moves to battle system
+- **NEW**: feat: Add loading placeholders for Pokemon images
 
 ## Current Battle Features
 - Turn-based combat with speed-based turn order
@@ -43,6 +44,8 @@
 - **NEW**: Status moves that don't deal damage but modify stats (-6 to +6 stages)
 - **NEW**: Stat modifications affect damage calculations
 - **NEW**: Stat modifications reset when Pokemon switch out
+- **NEW**: Loading placeholders for Pokemon images with spinner and error states
+- **NEW**: Smooth image transitions with opacity animations
 
 ## Next Steps (Future Enhancements)
 1. Add Pokemon team management and saving
