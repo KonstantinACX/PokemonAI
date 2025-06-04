@@ -1,5 +1,5 @@
 import { useAction, useQuery } from "convex/react";
-import { createFileRoute, Link } from "@tanstack/router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Heart, Shield, Sword, Zap, ImageIcon, Search, Sparkles } from "lucide-react";
 import { api } from "../../convex/_generated/api";
