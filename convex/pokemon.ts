@@ -5,24 +5,95 @@ import { api } from "./_generated/api";
 const pokemonTypes = ["Fire", "Water", "Grass", "Electric", "Psychic", "Ice", "Dragon", "Fighting", "Flying", "Poison", "Ground", "Rock", "Bug", "Ghost", "Steel", "Dark", "Fairy", "Normal"];
 
 const movePool = [
+  // Fire moves (3)
   { name: "Flame Burst", type: "Fire", power: 70, accuracy: 100 },
+  { name: "Flamethrower", type: "Fire", power: 90, accuracy: 100 },
+  { name: "Fire Blast", type: "Fire", power: 110, accuracy: 85 },
+  
+  // Water moves (3)
   { name: "Hydro Pump", type: "Water", power: 110, accuracy: 80 },
+  { name: "Surf", type: "Water", power: 90, accuracy: 100 },
+  { name: "Bubble Beam", type: "Water", power: 65, accuracy: 100 },
+  
+  // Grass moves (3)
   { name: "Vine Whip", type: "Grass", power: 45, accuracy: 100 },
+  { name: "Solar Beam", type: "Grass", power: 120, accuracy: 100 },
+  { name: "Leaf Blade", type: "Grass", power: 90, accuracy: 100 },
+  
+  // Electric moves (3)
   { name: "Thunder", type: "Electric", power: 110, accuracy: 70 },
+  { name: "Thunderbolt", type: "Electric", power: 90, accuracy: 100 },
+  { name: "Thunder Shock", type: "Electric", power: 40, accuracy: 100 },
+  
+  // Psychic moves (3)
   { name: "Psychic", type: "Psychic", power: 90, accuracy: 100 },
+  { name: "Psybeam", type: "Psychic", power: 65, accuracy: 100 },
+  { name: "Future Sight", type: "Psychic", power: 100, accuracy: 100 },
+  
+  // Ice moves (3)
   { name: "Ice Beam", type: "Ice", power: 90, accuracy: 100 },
+  { name: "Blizzard", type: "Ice", power: 110, accuracy: 70 },
+  { name: "Ice Shard", type: "Ice", power: 40, accuracy: 100 },
+  
+  // Dragon moves (3)
   { name: "Dragon Pulse", type: "Dragon", power: 85, accuracy: 100 },
+  { name: "Dragon Claw", type: "Dragon", power: 80, accuracy: 100 },
+  { name: "Outrage", type: "Dragon", power: 120, accuracy: 100 },
+  
+  // Fighting moves (3)
   { name: "Close Combat", type: "Fighting", power: 120, accuracy: 100 },
+  { name: "Brick Break", type: "Fighting", power: 75, accuracy: 100 },
+  { name: "Mach Punch", type: "Fighting", power: 40, accuracy: 100 },
+  
+  // Flying moves (3)
   { name: "Air Slash", type: "Flying", power: 75, accuracy: 95 },
+  { name: "Hurricane", type: "Flying", power: 110, accuracy: 70 },
+  { name: "Wing Attack", type: "Flying", power: 60, accuracy: 100 },
+  
+  // Poison moves (3)
   { name: "Sludge Bomb", type: "Poison", power: 90, accuracy: 100 },
+  { name: "Poison Jab", type: "Poison", power: 80, accuracy: 100 },
+  { name: "Toxic Spikes", type: "Poison", power: 45, accuracy: 100 },
+  
+  // Ground moves (3)
   { name: "Earthquake", type: "Ground", power: 100, accuracy: 100 },
+  { name: "Earth Power", type: "Ground", power: 90, accuracy: 100 },
+  { name: "Mud Shot", type: "Ground", power: 55, accuracy: 95 },
+  
+  // Rock moves (3)
   { name: "Rock Slide", type: "Rock", power: 75, accuracy: 90 },
-  { name: "Quick Attack", type: "Normal", power: 40, accuracy: 100 },
-  { name: "Shadow Ball", type: "Ghost", power: 80, accuracy: 100 },
+  { name: "Stone Edge", type: "Rock", power: 100, accuracy: 80 },
+  { name: "Rock Throw", type: "Rock", power: 50, accuracy: 90 },
+  
+  // Bug moves (3)
   { name: "Bug Bite", type: "Bug", power: 60, accuracy: 100 },
+  { name: "X-Scissor", type: "Bug", power: 80, accuracy: 100 },
+  { name: "Signal Beam", type: "Bug", power: 75, accuracy: 100 },
+  
+  // Ghost moves (3)
+  { name: "Shadow Ball", type: "Ghost", power: 80, accuracy: 100 },
+  { name: "Night Shade", type: "Ghost", power: 60, accuracy: 100 },
+  { name: "Shadow Claw", type: "Ghost", power: 70, accuracy: 100 },
+  
+  // Steel moves (3)
   { name: "Steel Wing", type: "Steel", power: 70, accuracy: 90 },
+  { name: "Iron Head", type: "Steel", power: 80, accuracy: 100 },
+  { name: "Metal Claw", type: "Steel", power: 50, accuracy: 95 },
+  
+  // Dark moves (3)
   { name: "Dark Pulse", type: "Dark", power: 80, accuracy: 100 },
+  { name: "Crunch", type: "Dark", power: 80, accuracy: 100 },
+  { name: "Bite", type: "Dark", power: 60, accuracy: 100 },
+  
+  // Fairy moves (3)
   { name: "Moonblast", type: "Fairy", power: 95, accuracy: 100 },
+  { name: "Dazzling Gleam", type: "Fairy", power: 80, accuracy: 100 },
+  { name: "Fairy Wind", type: "Fairy", power: 40, accuracy: 100 },
+  
+  // Normal moves (3)
+  { name: "Quick Attack", type: "Normal", power: 40, accuracy: 100 },
+  { name: "Body Slam", type: "Normal", power: 85, accuracy: 100 },
+  { name: "Hyper Beam", type: "Normal", power: 150, accuracy: 90 },
 ];
 
 const nameRoots = [
