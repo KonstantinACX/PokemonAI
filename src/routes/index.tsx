@@ -20,6 +20,7 @@ function HomePage() {
   const [battleMode, setBattleMode] = useState<"random" | "collection">("random");
   const [showPokemonSelection, setShowPokemonSelection] = useState(false);
   const [selectedCollectionPokemon, setSelectedCollectionPokemon] = useState<Id<"pokemon">[]>([]);
+  const [isGeneratingTeams, setIsGeneratingTeams] = useState(false);
 
   const navigate = useNavigate();
   const generateTeam = useAction(api.pokemon.generateTeam);
@@ -27,14 +28,21 @@ function HomePage() {
   const userCollection = useQuery(api.users.getUserCollection) || [];
 
   const handleGenerateTeams = async () => {
-    const [team1, team2] = await Promise.all([
-      generateTeam({}),
-      generateTeam({}),
-    ]);
-    
-    setPlayerTeam(team1);
-    setOpponentTeam(team2);
-    setSelectedPokemon({ player: team1[0], opponent: team2[0] });
+    setIsGeneratingTeams(true);
+    try {
+      const [team1, team2] = await Promise.all([
+        generateTeam({}),
+        generateTeam({}),
+      ]);
+      
+      setPlayerTeam(team1);
+      setOpponentTeam(team2);
+      setSelectedPokemon({ player: team1[0], opponent: team2[0] });
+    } catch (error) {
+      console.error("Error generating teams:", error);
+    } finally {
+      setIsGeneratingTeams(false);
+    }
   };
 
   const handleUseCollection = () => {
@@ -137,9 +145,19 @@ function HomePage() {
                   <button 
                     className="btn btn-primary btn-lg gap-2"
                     onClick={handleGenerateTeams}
+                    disabled={isGeneratingTeams}
                   >
-                    <Sparkles className="w-5 h-5" />
-                    Generate Teams
+                    {isGeneratingTeams ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm"></span>
+                        Generating Teams...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        Generate Teams
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

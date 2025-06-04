@@ -11,12 +11,19 @@ export async function generatePokemonImage(pokemon: { name: string; types: strin
   // Try multiple image generation services with retry logic
   const imageServices = [
     {
+      name: "Pollinations Fast",
+      url: `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=400&seed=${Math.floor(Math.random() * 10000)}`,
+      validate: false, // Don't validate, just return URL for speed
+    },
+    {
       name: "Pollinations",
       url: `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=400&seed=${Math.floor(Math.random() * 10000)}`,
+      validate: true,
     },
     {
       name: "Pollinations Alt",
       url: `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&model=flux&seed=${Math.floor(Math.random() * 10000)}`,
+      validate: true,
     },
   ];
   
@@ -25,9 +32,15 @@ export async function generatePokemonImage(pokemon: { name: string; types: strin
       try {
         console.log(`Attempting image generation with ${service.name}, attempt ${attempt + 1}`);
         
+        if (!service.validate) {
+          // Fast mode: return URL without validation
+          console.log(`Image generation (fast mode) with ${service.name}`);
+          return service.url;
+        }
+        
         // Test if the URL responds within a reasonable time
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
         
         const response = await fetch(service.url, {
           method: 'HEAD',
@@ -45,9 +58,9 @@ export async function generatePokemonImage(pokemon: { name: string; types: strin
       } catch (error) {
         console.log(`Image generation error with ${service.name}, attempt ${attempt + 1}:`, error);
         
-        // Wait before retry
-        if (attempt < 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+        // Wait before retry (only for validated services)
+        if (service.validate && attempt < 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
     }
