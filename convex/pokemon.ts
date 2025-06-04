@@ -270,8 +270,8 @@ export const createPokemon = mutation({
     })),
     description: v.string(),
     imageUrl: v.optional(v.string()),
-    level: v.number(),
-    xp: v.number(),
+    level: v.optional(v.number()),
+    xp: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("pokemon", args);

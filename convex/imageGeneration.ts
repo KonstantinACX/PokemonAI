@@ -110,8 +110,8 @@ export const generatePokemonWithImageAction = action({
       })),
     })),
     description: v.string(),
-    level: v.number(),
-    xp: v.number(),
+    level: v.optional(v.number()),
+    xp: v.optional(v.number()),
   },
   handler: async (ctx, pokemon): Promise<string> => {
     try {

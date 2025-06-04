@@ -315,7 +315,7 @@ function PokemonCard({
       onClick={onClick}
     >
       <div className="card-body p-3">
-        <div className="text-sm font-bold truncate">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level}</span></div>
+        <div className="text-sm font-bold truncate">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level || 5}</span></div>
         
         {/* Pokemon Image */}
         <PokemonImageSmall 
@@ -483,7 +483,7 @@ function SelectablePokemonCard({
       onClick={disabled ? undefined : onToggle}
     >
       <div className="card-body p-3">
-        <div className="font-bold text-sm truncate">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level}</span></div>
+        <div className="font-bold text-sm truncate">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level || 5}</span></div>
         
         {/* Pokemon Image */}
         <PokemonImageSmall 

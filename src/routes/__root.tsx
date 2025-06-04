@@ -34,13 +34,6 @@ export const Route = createRootRouteWithContext<{
 function RootComponent() {
   const { queryClient, convexClient: convex } = Route.useRouteContext();
 
-  // Debug logging for production troubleshooting
-  console.log("Clerk environment:", {
-    publishableKey: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-    hasPublishableKey: !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-    mode: import.meta.env.MODE,
-    dev: import.meta.env.DEV
-  });
 
   // Show error if no publishable key
   if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {

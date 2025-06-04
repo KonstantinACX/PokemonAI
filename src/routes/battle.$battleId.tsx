@@ -128,7 +128,7 @@ function BattlePage() {
                           onClick={() => void handleSwitchPokemon(pokemon._id)}
                         >
                           <div className="text-center">
-                            <div className="font-bold text-sm">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level}</span></div>
+                            <div className="font-bold text-sm">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level || 5}</span></div>
                             <div className="flex gap-1 justify-center mb-1">
                               {pokemon.types.map((type: string) => (
                                 <span key={type} className="badge badge-primary badge-xs">
@@ -211,7 +211,7 @@ function BattlePage() {
                                       }}
                                     >
                                       <div className="text-center">
-                                        <div className="font-bold text-xs">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level}</span></div>
+                                        <div className="font-bold text-xs">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level || 5}</span></div>
                                         <div className="flex gap-1 justify-center mb-1">
                                           {pokemon.types.map((type: string) => (
                                             <span key={type} className="badge badge-primary badge-xs">
@@ -288,7 +288,7 @@ function PokemonDisplay({
       <div className="card-body">
         <div className="card-title text-sm opacity-70">{label}</div>
         
-        <h3 className="text-lg font-bold">{pokemon.name} <span className="text-sm font-normal opacity-70">Lv.{pokemon.level}</span></h3>
+        <h3 className="text-lg font-bold">{pokemon.name} <span className="text-sm font-normal opacity-70">Lv.{pokemon.level || 5}</span></h3>
         
         {/* Pokemon Image */}
         <PokemonImage 
