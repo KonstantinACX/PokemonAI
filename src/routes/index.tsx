@@ -1,7 +1,7 @@
 import { useAction, useMutation, useQuery } from "convex/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Swords, Sparkles } from "lucide-react";
+import { Swords, Sparkles, ImageIcon } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { getStatAdjective, getStatColor } from "../utils/pokemonStats";
@@ -180,15 +180,10 @@ function PokemonCard({
         <div className="text-sm font-bold truncate">{pokemon.name}</div>
         
         {/* Pokemon Image */}
-        {pokemon.imageUrl && (
-          <div className="flex justify-center my-2">
-            <img 
-              src={pokemon.imageUrl} 
-              alt={pokemon.name}
-              className="w-16 h-16 rounded object-cover border border-base-300"
-            />
-          </div>
-        )}
+        <PokemonImageSmall 
+          imageUrl={pokemon.imageUrl} 
+          name={pokemon.name} 
+        />
         
         <div className="flex gap-1 mb-2">
           {pokemon.types.map((type: string) => (
@@ -219,5 +214,56 @@ function BattleLink({ battleId }: { battleId: Id<"battles"> }) {
       <Swords className="w-4 h-4" />
       Enter Battle
     </Link>
+  );
+}
+
+
+function PokemonImageSmall({ imageUrl, name }: { imageUrl?: string; name: string }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
+
+  const handleError = () => {
+    setIsLoading(false);
+    setHasError(true);
+  };
+
+  if (!imageUrl) {
+    return (
+      <div className="flex justify-center my-2">
+        <div className="w-16 h-16 rounded border border-base-300 bg-base-200 flex items-center justify-center">
+          <ImageIcon className="w-6 h-6 opacity-50" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex justify-center my-2">
+      <div className="relative w-16 h-16">
+        {isLoading && (
+          <div className="absolute inset-0 rounded border border-base-300 bg-base-200 flex items-center justify-center">
+            <div className="loading loading-spinner loading-xs"></div>
+          </div>
+        )}
+        <img 
+          src={imageUrl} 
+          alt={name}
+          className={`w-16 h-16 rounded object-cover border border-base-300 ${
+            isLoading ? "opacity-0" : "opacity-100"
+          } transition-opacity duration-300`}
+          onLoad={handleLoad}
+          onError={handleError}
+        />
+        {hasError && !isLoading && (
+          <div className="absolute inset-0 rounded border border-base-300 bg-base-200 flex items-center justify-center">
+            <ImageIcon className="w-6 h-6 opacity-50" />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

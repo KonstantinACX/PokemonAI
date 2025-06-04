@@ -2,7 +2,7 @@ import { convexQuery } from "@convex-dev/react-query";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { ArrowLeft, Heart, Shield, Sword, Zap } from "lucide-react";
+import { ArrowLeft, Heart, Shield, Sword, Zap, ImageIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -269,15 +269,10 @@ function PokemonDisplay({
         <h3 className="text-lg font-bold">{pokemon.name}</h3>
         
         {/* Pokemon Image */}
-        {pokemon.imageUrl && (
-          <div className="flex justify-center mb-3">
-            <img 
-              src={pokemon.imageUrl} 
-              alt={pokemon.name}
-              className="w-24 h-24 rounded-lg object-cover border-2 border-base-300"
-            />
-          </div>
-        )}
+        <PokemonImage 
+          imageUrl={pokemon.imageUrl} 
+          name={pokemon.name} 
+        />
         
         <div className="flex gap-1 mb-3">
           {pokemon.types.map((type: string) => (
@@ -339,6 +334,56 @@ function PokemonDisplay({
             ))}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PokemonImage({ imageUrl, name }: { imageUrl?: string; name: string }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
+
+  const handleError = () => {
+    setIsLoading(false);
+    setHasError(true);
+  };
+
+  if (!imageUrl) {
+    return (
+      <div className="flex justify-center mb-3">
+        <div className="w-24 h-24 rounded-lg border-2 border-base-300 bg-base-200 flex items-center justify-center">
+          <ImageIcon className="w-8 h-8 opacity-50" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex justify-center mb-3">
+      <div className="relative w-24 h-24">
+        {isLoading && (
+          <div className="absolute inset-0 rounded-lg border-2 border-base-300 bg-base-200 flex items-center justify-center">
+            <div className="loading loading-spinner loading-sm"></div>
+          </div>
+        )}
+        <img 
+          src={imageUrl} 
+          alt={name}
+          className={`w-24 h-24 rounded-lg object-cover border-2 border-base-300 ${
+            isLoading ? "opacity-0" : "opacity-100"
+          } transition-opacity duration-300`}
+          onLoad={handleLoad}
+          onError={handleError}
+        />
+        {hasError && !isLoading && (
+          <div className="absolute inset-0 rounded-lg border-2 border-base-300 bg-base-200 flex items-center justify-center">
+            <ImageIcon className="w-8 h-8 opacity-50" />
+          </div>
+        )}
       </div>
     </div>
   );

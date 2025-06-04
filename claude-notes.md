@@ -29,7 +29,7 @@
 ## Session Commits
 - 76b4971: Document Pokemon battle simulator app requirements  
 - e91c228: Implement Pokemon battle simulator MVP
-- **Pending**: Improvements to AI opponent system and routing fixes
+- **NEW**: feat: Add stat-modifying moves to battle system
 
 ## Current Battle Features
 - Turn-based combat with speed-based turn order
@@ -39,6 +39,10 @@
 - Automatic AI opponent with random move selection
 - Real-time HP tracking and battle log
 - Victory conditions and game over states
+- **NEW**: Stat modification system with boost/reduction moves
+- **NEW**: Status moves that don't deal damage but modify stats (-6 to +6 stages)
+- **NEW**: Stat modifications affect damage calculations
+- **NEW**: Stat modifications reset when Pokemon switch out
 
 ## Next Steps (Future Enhancements)
 1. Add Pokemon team management and saving
