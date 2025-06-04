@@ -5,9 +5,7 @@ const authConfig = {
       domain:
         "CLERK_JWT_ISSUER_DOMAIN" in process.env
           ? process.env.CLERK_JWT_ISSUER_DOMAIN
-          : process.env.NODE_ENV === "development"
-            ? "https://workable-dog-93.clerk.accounts.dev"
-            : undefined,
+          : "https://workable-dog-93.clerk.accounts.dev", // Use same domain for both dev and prod
       applicationID: "convex",
     },
   ],
