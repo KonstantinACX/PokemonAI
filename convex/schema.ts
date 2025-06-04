@@ -21,6 +21,7 @@ export default defineSchema({
       accuracy: v.number(),
     })),
     description: v.string(),
+    imageUrl: v.optional(v.string()), // URL to generated Pokemon image
   }),
 
   battles: defineTable({

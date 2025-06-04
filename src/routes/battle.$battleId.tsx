@@ -267,6 +267,17 @@ function PokemonDisplay({
         
         <h3 className="text-lg font-bold">{pokemon.name}</h3>
         
+        {/* Pokemon Image */}
+        {pokemon.imageUrl && (
+          <div className="flex justify-center mb-3">
+            <img 
+              src={pokemon.imageUrl} 
+              alt={pokemon.name}
+              className="w-24 h-24 rounded-lg object-cover border-2 border-base-300"
+            />
+          </div>
+        )}
+        
         <div className="flex gap-1 mb-3">
           {pokemon.types.map((type: string) => (
             <span key={type} className="badge badge-primary badge-sm">

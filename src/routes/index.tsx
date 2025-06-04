@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Swords, Sparkles } from "lucide-react";
@@ -18,7 +18,7 @@ function HomePage() {
   });
   const [battleId, setBattleId] = useState<Id<"battles"> | null>(null);
 
-  const generateTeam = useMutation(api.pokemon.generateTeam);
+  const generateTeam = useAction(api.pokemon.generateTeam);
   const createBattle = useMutation(api.battles.createBattle);
 
   const handleGenerateTeams = async () => {
@@ -177,6 +177,18 @@ function PokemonCard({
     >
       <div className="card-body p-3">
         <div className="text-sm font-bold truncate">{pokemon.name}</div>
+        
+        {/* Pokemon Image */}
+        {pokemon.imageUrl && (
+          <div className="flex justify-center my-2">
+            <img 
+              src={pokemon.imageUrl} 
+              alt={pokemon.name}
+              className="w-16 h-16 rounded object-cover border border-base-300"
+            />
+          </div>
+        )}
+        
         <div className="flex gap-1 mb-2">
           {pokemon.types.map((type: string) => (
             <span key={type} className="badge badge-primary badge-xs">

@@ -1,5 +1,6 @@
-import { mutation, query } from "./_generated/server";
+import { action, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { api } from "./_generated/api";
 
 const pokemonTypes = ["Fire", "Water", "Grass", "Electric", "Psychic", "Ice", "Dragon", "Fighting", "Flying", "Poison", "Ground", "Rock", "Bug", "Ghost", "Steel", "Dark", "Fairy", "Normal"];
 
@@ -104,14 +105,78 @@ export const getPokemon = query({
   },
 });
 
-export const generateTeam = mutation({
+async function generatePokemonImage(pokemon: { name: string; types: string[]; description: string }): Promise<string> {
+  // Generate anime-style Pokemon image using a placeholder service
+  // In a real implementation, you would use DALL-E, Midjourney, or similar
+  const prompt = `anime style pokemon character, ${pokemon.name}, ${pokemon.types.join(" and ")} type, ${pokemon.description}, cute, colorful, high quality anime art, pokemon style, clean background`;
+  
+  // For now, return a placeholder image that represents the Pokemon
+  // This could be replaced with actual AI image generation
+  const typeColors = {
+    Fire: "ff6666", Water: "6666ff", Grass: "66ff66", Electric: "ffff66",
+    Psychic: "ff66ff", Ice: "66ffff", Dragon: "9966ff", Fighting: "ff9966",
+    Flying: "ccccff", Poison: "9966cc", Ground: "cc9966", Rock: "996633",
+    Bug: "99cc66", Ghost: "9999cc", Steel: "cccccc", Dark: "666666",
+    Fairy: "ffccff", Normal: "cccccc"
+  };
+  
+  const primaryColor = typeColors[pokemon.types[0] as keyof typeof typeColors] || "cccccc";
+  // Using a placeholder service that can generate colored images with text
+  return `https://via.placeholder.com/200x200/${primaryColor}/000000?text=${encodeURIComponent(pokemon.name)}`;
+}
+
+export const generatePokemonWithImage = action({
   args: {},
-  handler: async (ctx) => {
-    const team = [];
+  handler: async (ctx): Promise<string> => {
+    const pokemon = generateRandomPokemon();
+    
+    try {
+      // Generate image for the Pokemon
+      const imageUrl = await generatePokemonImage(pokemon);
+      
+      // Create Pokemon with image
+      const pokemonWithImage = {
+        ...pokemon,
+        imageUrl
+      };
+      
+      return await ctx.runMutation(api.pokemon.createPokemon, pokemonWithImage);
+    } catch (error) {
+      // If image generation fails, create Pokemon without image
+      return await ctx.runMutation(api.pokemon.createPokemon, pokemon);
+    }
+  },
+});
+
+export const createPokemon = mutation({
+  args: {
+    name: v.string(),
+    types: v.array(v.string()),
+    hp: v.number(),
+    attack: v.number(),
+    defense: v.number(),
+    speed: v.number(),
+    moves: v.array(v.object({
+      name: v.string(),
+      type: v.string(),
+      power: v.number(),
+      accuracy: v.number(),
+    })),
+    description: v.string(),
+    imageUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("pokemon", args);
+  },
+});
+
+export const generateTeam = action({
+  args: {},
+  handler: async (ctx): Promise<string[]> => {
+    const team: string[] = [];
     for (let i = 0; i < 3; i++) {
-      const pokemon = generateRandomPokemon();
-      const id = await ctx.db.insert("pokemon", pokemon);
-      team.push(id);
+      const pokemonId: string = await ctx.runAction(api.pokemon.generatePokemonWithImage, {});
+      team.push(pokemonId);
     }
     return team;
   },
