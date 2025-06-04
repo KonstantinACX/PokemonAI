@@ -125,6 +125,13 @@ function BattlePage() {
                         >
                           <div className="text-center">
                             <div className="font-bold text-sm">{pokemon.name}</div>
+                            <div className="flex gap-1 justify-center mb-1">
+                              {pokemon.types.map((type: string) => (
+                                <span key={type} className="badge badge-primary badge-xs">
+                                  {type}
+                                </span>
+                              ))}
+                            </div>
                             <div className="text-xs opacity-70">
                               HP: {pokemon.hp}
                             </div>
@@ -199,6 +206,13 @@ function BattlePage() {
                                     >
                                       <div className="text-center">
                                         <div className="font-bold text-xs">{pokemon.name}</div>
+                                        <div className="flex gap-1 justify-center mb-1">
+                                          {pokemon.types.map((type: string) => (
+                                            <span key={type} className="badge badge-primary badge-xs">
+                                              {type}
+                                            </span>
+                                          ))}
+                                        </div>
                                         <div className="text-xs opacity-70">
                                           HP: {pokemon.hp}
                                         </div>
