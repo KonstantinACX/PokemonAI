@@ -7,6 +7,11 @@ export default defineSchema({
     name: v.string(),
   }).index("by_clerkId", ["clerkId"]),
 
+  collections: defineTable({
+    userId: v.id("users"),
+    caughtPokemon: v.array(v.id("pokemon")),
+  }).index("by_userId", ["userId"]),
+
   pokemon: defineTable({
     name: v.string(),
     types: v.array(v.string()), // e.g., ["Fire", "Flying"]

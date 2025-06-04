@@ -1,24 +1,80 @@
-import { useAction, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery, Authenticated, Unauthenticated } from "convex/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SignInButton } from "@clerk/clerk-react";
 import { useState } from "react";
-import { ArrowLeft, Heart, Shield, Sword, Zap, ImageIcon, Search, Sparkles } from "lucide-react";
+import { ArrowLeft, Heart, Shield, Sword, Zap, ImageIcon, Search, Sparkles, X } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { getStatAdjective, getStatColor } from "../utils/pokemonStats";
 
 export const Route = createFileRoute("/catch")({
-  component: CatchPage,
+  component: CatchPageWrapper,
 });
+
+function CatchPageWrapper() {
+  return (
+    <>
+      <Authenticated>
+        <CatchPage />
+      </Authenticated>
+      <Unauthenticated>
+        <UnauthenticatedCatchPage />
+      </Unauthenticated>
+    </>
+  );
+}
+
+function UnauthenticatedCatchPage() {
+  return (
+    <div className="max-w-2xl mx-auto text-center">
+      <div className="not-prose mb-4">
+        <Link to="/" className="btn btn-ghost btn-sm gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </Link>
+      </div>
+
+      <h1 className="mt-0">Pokemon Catching</h1>
+      <p className="mb-6">Sign in to start catching and saving Pokemon to your collection!</p>
+      
+      <div className="card bg-base-200">
+        <div className="card-body">
+          <div className="mb-4">
+            <Search className="w-16 h-16 mx-auto opacity-50" />
+          </div>
+          <h2 className="card-title justify-center">Sign In Required</h2>
+          <p>Create an account to:</p>
+          <ul className="text-left list-disc list-inside space-y-1 opacity-70">
+            <li>Catch wild AI-generated Pokemon</li>
+            <li>Build your personal collection</li>
+            <li>Keep your Pokemon between sessions</li>
+            <li>Battle with your caught Pokemon</li>
+          </ul>
+          <div className="card-actions justify-center mt-4">
+            <SignInButton mode="modal">
+              <button className="btn btn-primary gap-2">
+                <Sparkles className="w-4 h-4" />
+                Sign In to Start Catching
+              </button>
+            </SignInButton>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function CatchPage() {
   const [currentPokemonId, setCurrentPokemonId] = useState<Id<"pokemon"> | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [caughtPokemon, setCaughtPokemon] = useState<Id<"pokemon">[]>([]);
   
   const generateWildPokemon = useAction(api.pokemon.generatePokemonWithImage);
   const currentPokemon = useQuery(api.pokemon.getPokemon, 
     currentPokemonId ? { id: currentPokemonId } : "skip"
   );
+  const caughtPokemon = useQuery(api.users.getUserCollection) || [];
+  const addToCollection = useMutation(api.users.addToCollection);
+  const removeFromCollection = useMutation(api.users.removeFromCollection);
 
   const handleFindPokemon = async () => {
     setIsSearching(true);
@@ -32,15 +88,19 @@ function CatchPage() {
     }
   };
 
-  const handleCatchPokemon = () => {
+  const handleCatchPokemon = async () => {
     if (currentPokemonId) {
-      setCaughtPokemon(prev => [...prev, currentPokemonId]);
+      await addToCollection({ pokemonId: currentPokemonId });
       setCurrentPokemonId(null);
     }
   };
 
   const handleSkipPokemon = () => {
     setCurrentPokemonId(null);
+  };
+
+  const handleReleasePokemon = async (pokemonId: Id<"pokemon">) => {
+    await removeFromCollection({ pokemonId });
   };
 
   return (
@@ -138,9 +198,13 @@ function CatchPage() {
                 <p>No Pokemon caught yet. Start your collection!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-1 gap-3">
                 {caughtPokemon.map((pokemonId, index) => (
-                  <CaughtPokemonCard key={`${pokemonId}-${index}`} pokemonId={pokemonId} />
+                  <CaughtPokemonCard 
+                    key={`${pokemonId}-${index}`} 
+                    pokemonId={pokemonId} 
+                    onRelease={handleReleasePokemon}
+                  />
                 ))}
               </div>
             )}
@@ -163,7 +227,7 @@ function WildPokemonDisplay({ pokemon }: { pokemon: any }) {
           name={pokemon.name} 
         />
         
-        <div className="flex gap-1 justify-center mb-3">
+        <div className="flex gap-1 justify-center mb-3 mt-2">
           {pokemon.types.map((type: string) => (
             <span key={type} className="badge badge-primary badge-sm">
               {type}
@@ -201,15 +265,12 @@ function WildPokemonDisplay({ pokemon }: { pokemon: any }) {
         <div className="mt-3">
           <div className="text-xs opacity-70 mb-1">Moves:</div>
           <div className="space-y-1">
-            {pokemon.moves.slice(0, 2).map((move: any, index: number) => (
+            {pokemon.moves.map((move: any, index: number) => (
               <div key={index} className="text-xs bg-base-200 p-1 rounded">
                 <span className="font-semibold">{move.name}</span>
                 <span className="opacity-70"> ({move.type}, {move.power === 0 ? "STATUS" : `${move.power} PWR`})</span>
               </div>
             ))}
-            {pokemon.moves.length > 2 && (
-              <div className="text-xs opacity-70">+{pokemon.moves.length - 2} more moves</div>
-            )}
           </div>
         </div>
       </div>
@@ -217,7 +278,7 @@ function WildPokemonDisplay({ pokemon }: { pokemon: any }) {
   );
 }
 
-function CaughtPokemonCard({ pokemonId }: { pokemonId: Id<"pokemon"> }) {
+function CaughtPokemonCard({ pokemonId, onRelease }: { pokemonId: Id<"pokemon">; onRelease: (id: Id<"pokemon">) => void }) {
   const pokemon = useQuery(api.pokemon.getPokemon, { id: pokemonId });
 
   if (!pokemon) {
@@ -238,17 +299,47 @@ function CaughtPokemonCard({ pokemonId }: { pokemonId: Id<"pokemon"> }) {
           <PokemonImageSmall imageUrl={pokemon.imageUrl} name={pokemon.name} />
           <div className="flex-1">
             <div className="font-bold text-sm">{pokemon.name}</div>
-            <div className="flex gap-1 mb-1">
+            <div className="flex gap-1 mb-2">
               {pokemon.types.map((type: string) => (
                 <span key={type} className="badge badge-primary badge-xs">
                   {type}
                 </span>
               ))}
             </div>
-            <div className="text-xs opacity-70">
-              HP: {pokemon.hp} • ATK: {pokemon.attack} • DEF: {pokemon.defense}
+            <div className="grid grid-cols-2 gap-1 text-xs">
+              <div className="flex items-center gap-1">
+                <Heart className="w-3 h-3" />
+                <span className={getStatColor(pokemon.hp, 'hp')}>
+                  HP: {getStatAdjective(pokemon.hp, 'hp')}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Sword className="w-3 h-3" />
+                <span className={getStatColor(pokemon.attack, 'attack')}>
+                  ATK: {getStatAdjective(pokemon.attack, 'attack')}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Shield className="w-3 h-3" />
+                <span className={getStatColor(pokemon.defense, 'defense')}>
+                  DEF: {getStatAdjective(pokemon.defense, 'defense')}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Zap className="w-3 h-3" />
+                <span className={getStatColor(pokemon.speed, 'speed')}>
+                  SPD: {getStatAdjective(pokemon.speed, 'speed')}
+                </span>
+              </div>
             </div>
           </div>
+          <button
+            className="btn btn-ghost btn-sm btn-circle text-error hover:bg-error hover:text-error-content"
+            onClick={() => onRelease(pokemonId)}
+            title="Release Pokemon"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>

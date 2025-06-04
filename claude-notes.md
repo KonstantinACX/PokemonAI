@@ -1,55 +1,98 @@
 # Claude Code Session Notes - PokemonAI
 
 ## Session Start
-- **Start Commit**: e91c228 (feat: Implement Pokemon battle simulator MVP)
-- **Current Status**: MVP fully functional with AI opponent system
+- **Start Commit**: 8a53a31 (fix: Correct import path in catch route)
+- **Current Status**: Complete Pokemon ecosystem with catching, collection, and battle modes
 - **If starting fresh session**: Reread this file and the project context
 
-## Project Status - COMPLETE MVP ✅
+## Project Status - COMPLETE ECOSYSTEM ✅
 - ✅ Gathered requirements: Pokemon battle simulator with AI-generated Pokemon
 - ✅ Documented app idea in CLAUDE.md
-- ✅ Implemented core functionality:
-  - Database schema for Pokemon and battles
-  - Pokemon generation with stats, types, moves
-  - Battle system with type effectiveness calculation
-  - Home page with team generation
-  - Battle interface with move selection
-  - **NEW**: Automatic AI opponent move system
-  - **NEW**: Fixed TanStack Router Link components
-- ✅ **Tested complete battle flow**: Full turn-based battles working with AI opponent
+- ✅ Implemented complete Pokemon ecosystem:
+  - Database schema for Pokemon, battles, users, and collections
+  - Pokemon generation with stats, types, moves (exactly 4 moves each)
+  - Battle system with type effectiveness calculation and doubled damage
+  - Wild Pokemon catching mode with encounter system
+  - Persistent Pokemon collection with authentication
+  - Collection-based battle teams with smart selection
+  - Real AI-generated Pokemon images via Pollinations API
+  - Descriptive stat system using adjectives instead of numbers
 
-## Recent Improvements
-- Added `performAIMove` mutation for automatic opponent turns
-- Integrated useEffect in battle component to trigger AI moves with 1.5s delay
-- Fixed BattleLink component to use proper TanStack Router Link
-- **NEW**: Removed authentication requirement - app now works without sign-in
-- **NEW**: Simplified layout with cleaner header and universal access
-- Verified full battle flow: player move → AI response → turn cycling
+## Major Features Implemented This Session
+- **Pokemon Catching Mode**: Complete wild Pokemon encounter and collection system
+- **User Authentication**: Clerk integration with persistent user collections
+- **Collection Management**: Save/release Pokemon with cross-session persistence
+- **Collection Battle Mode**: Use caught Pokemon in battles with team selection interface
+- **Enhanced Pokemon Generation**: All Pokemon now have exactly 4 moves
+- **Faster Battles**: Doubled attack damage for quicker battle resolution
+- **Improved UI**: Vertical layout, authentication flows, visual enhancements
 
-## Session Commits
-- 76b4971: Document Pokemon battle simulator app requirements  
-- e91c228: Implement Pokemon battle simulator MVP
+## Session Commits (Latest)
+- 8a53a31: fix: Correct import path in catch route
+- b7b3d4e: feat: Add Pokemon catching mode
+- b8af12a: feat: Display Pokemon types in switch Pokemon interface
+- 9b016a7: feat: Auto-navigate to battle after Start Battle
+- c1f66b0: feat: Add loading placeholders for Pokemon images
 - 62aa001: feat: Add stat-modifying moves to battle system
-- **NEW**: feat: Add loading placeholders for Pokemon images
+- d858d98: feat: Replace numeric stats with descriptive adjectives
+- 68068f9: feat: Expand Pokemon movePool with 3 moves per type
+- 42f7ef0: feat: Implement real AI image generation for Pokemon
+- 789d10b: feat: Add Pokemon image generation and display
 
-## Current Battle Features
+## Complete Feature Set
+### Battle System
 - Turn-based combat with speed-based turn order
-- Type effectiveness system (super effective, not very effective, no effect)
-- Damage calculation with randomness (±20%)
+- Type effectiveness system (18+ Pokemon types)
+- Doubled damage calculation for faster battles
 - Move accuracy checks with miss chances
 - Automatic AI opponent with random move selection
 - Real-time HP tracking and battle log
-- Victory conditions and game over states
-- **NEW**: Stat modification system with boost/reduction moves
-- **NEW**: Status moves that don't deal damage but modify stats (-6 to +6 stages)
-- **NEW**: Stat modifications affect damage calculations
-- **NEW**: Stat modifications reset when Pokemon switch out
-- **NEW**: Loading placeholders for Pokemon images with spinner and error states
-- **NEW**: Smooth image transitions with opacity animations
+- Stat modification system (-6 to +6 stages)
+- Pokemon switching and team management
+
+### Pokemon Management
+- AI-generated Pokemon with unique names, stats, types
+- Real image generation using Pollinations API
+- Exactly 4 moves per Pokemon (guaranteed type matching)
+- Descriptive stats using adjectives (Excellent, Great, Good, etc.)
+- Wild Pokemon encounters with catch/skip options
+- Persistent collection storage with authentication
+
+### User Experience
+- Three game modes: Random Battle, Collection Battle, Catch Mode
+- Authentication with Clerk for collection persistence
+- Smart team selection for users with 3+ Pokemon
+- Visual feedback with loading states and animations
+- Responsive design with vertical layout
+- Release Pokemon functionality
+
+## Technical Architecture
+- **Frontend**: React + Vite + TanStack Router + Tailwind CSS + daisyUI
+- **Backend**: Convex (serverless) with real-time updates
+- **Auth**: Clerk integration with user management
+- **AI Images**: Pollinations API for Pokemon generation
+- **Database**: Users, Pokemon, Battles, Collections tables
+
+## Current Game Flow
+1. **Home Page**: Choose Random Battle, Collection Battle, or Catch Mode
+2. **Catch Mode**: Find wild Pokemon → catch/skip → build collection
+3. **Collection Battle**: Select 3 Pokemon from collection → battle AI team
+4. **Random Battle**: Generate random teams → battle
+5. **Battle Interface**: Turn-based combat with full Pokemon switching
+6. **Collection Management**: View/release caught Pokemon
+
+## Performance Optimizations
+- Doubled battle damage for faster resolution
+- Exactly 4 moves per Pokemon for consistency
+- Efficient database queries with indexes
+- Real-time updates without polling
+- Image loading with error handling
 
 ## Next Steps (Future Enhancements)
-1. Add Pokemon team management and saving
-2. Implement smarter AI opponent strategies
-3. Add more Pokemon types and moves
-4. Create user authentication flow
-5. Add battle history and statistics
+1. Advanced AI battle strategies (type effectiveness awareness)
+2. Pokemon evolution system
+3. Move learning and customization
+4. Tournament/league system
+5. Social features (trade Pokemon, friend battles)
+6. Pokemon rarity/shiny variants
+7. Battle replays and statistics

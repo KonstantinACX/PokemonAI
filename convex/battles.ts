@@ -56,8 +56,8 @@ function calculateDamage(
   const modifiedAttack = attackerAttack * getStatMultiplier(attackerStatMods?.attack || 0);
   const modifiedDefense = defenderDefense * getStatMultiplier(defenderStatMods?.defense || 0);
   
-  // Basic damage formula: ((Attack / Defense) * MovePower * Effectiveness) / 10
-  const baseDamage = Math.floor(((modifiedAttack / modifiedDefense) * attackerMove.power * effectiveness) / 10);
+  // Basic damage formula: ((Attack / Defense) * MovePower * Effectiveness) / 5 (doubled from /10)
+  const baseDamage = Math.floor(((modifiedAttack / modifiedDefense) * attackerMove.power * effectiveness) / 5);
   
   // Add some randomness (±20%)
   const variance = Math.random() * 0.4 - 0.2; // -20% to +20%

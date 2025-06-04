@@ -151,8 +151,8 @@ function generateRandomPokemon() {
     ? [primaryType, pokemonTypes.filter(t => t !== primaryType)[Math.floor(Math.random() * (pokemonTypes.length - 1))]]
     : [primaryType];
 
-  // Generate moves (2-4 moves, at least one matching Pokemon's type)
-  const numMoves = Math.floor(Math.random() * 3) + 2;
+  // Generate exactly 4 moves, at least one matching Pokemon's type
+  const numMoves = 4;
   const typeMoves = movePool.filter(m => types.includes(m.type));
   const otherMoves = movePool.filter(m => !types.includes(m.type));
   
