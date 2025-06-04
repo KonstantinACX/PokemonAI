@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Swords, Sparkles } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+import { getStatAdjective, getStatColor } from "../utils/pokemonStats";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -197,8 +198,12 @@ function PokemonCard({
           ))}
         </div>
         <div className="text-xs space-y-1 opacity-80">
-          <div>HP: {pokemon.hp}</div>
-          <div>ATK: {pokemon.attack}</div>
+          <div className={getStatColor(pokemon.hp, 'hp')}>
+            {getStatAdjective(pokemon.hp, 'hp')}
+          </div>
+          <div className={getStatColor(pokemon.attack, 'attack')}>
+            {getStatAdjective(pokemon.attack, 'attack')}
+          </div>
         </div>
       </div>
     </div>

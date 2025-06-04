@@ -6,6 +6,7 @@ import { ArrowLeft, Heart, Shield, Sword, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+import { getStatAdjective, getStatColor } from "../utils/pokemonStats";
 
 const battleQueryOptions = (battleId: Id<"battles">) => 
   convexQuery(api.battles.getBattle, { id: battleId });
@@ -302,19 +303,27 @@ function PokemonDisplay({
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex items-center gap-1">
               <Sword className="w-3 h-3" />
-              <span>ATK: {pokemon.attack}</span>
+              <span className={getStatColor(pokemon.attack, 'attack')}>
+                {getStatAdjective(pokemon.attack, 'attack')}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <Shield className="w-3 h-3" />
-              <span>DEF: {pokemon.defense}</span>
+              <span className={getStatColor(pokemon.defense, 'defense')}>
+                {getStatAdjective(pokemon.defense, 'defense')}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <Zap className="w-3 h-3" />
-              <span>SPD: {pokemon.speed}</span>
+              <span className={getStatColor(pokemon.speed, 'speed')}>
+                {getStatAdjective(pokemon.speed, 'speed')}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <Heart className="w-3 h-3" />
-              <span>HP: {pokemon.hp}</span>
+              <span className={getStatColor(pokemon.hp, 'hp')}>
+                {getStatAdjective(pokemon.hp, 'hp')}
+              </span>
             </div>
           </div>
         </div>
