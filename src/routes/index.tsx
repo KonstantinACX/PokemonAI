@@ -1,4 +1,4 @@
-import { useAction, useMutation, useQuery, Authenticated, Unauthenticated } from "convex/react";
+import { useAction, useMutation, useQuery, Authenticated } from "convex/react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Swords, Sparkles, ImageIcon, Search, Users } from "lucide-react";
@@ -35,9 +35,9 @@ function HomePage() {
         generateTeam({}),
       ]);
       
-      setPlayerTeam(team1);
-      setOpponentTeam(team2);
-      setSelectedPokemon({ player: team1[0], opponent: team2[0] });
+      setPlayerTeam(team1 as Id<"pokemon">[]);
+      setOpponentTeam(team2 as Id<"pokemon">[]);
+      setSelectedPokemon({ player: team1[0] as Id<"pokemon">, opponent: team2[0] as Id<"pokemon"> });
     } catch (error) {
       console.error("Error generating teams:", error);
     } finally {
@@ -55,8 +55,8 @@ function HomePage() {
         
         // Generate random team for opponent
         generateTeam({}).then((team2) => {
-          setOpponentTeam(team2);
-          setSelectedPokemon(prev => ({ ...prev, opponent: team2[0] }));
+          setOpponentTeam(team2 as Id<"pokemon">[]);
+          setSelectedPokemon(prev => ({ ...prev, opponent: team2[0] as Id<"pokemon"> }));
         });
       } else {
         // Show Pokemon selection interface
@@ -86,8 +86,8 @@ function HomePage() {
       
       // Generate random team for opponent
       const team2 = await generateTeam({});
-      setOpponentTeam(team2);
-      setSelectedPokemon(prev => ({ ...prev, opponent: team2[0] }));
+      setOpponentTeam(team2 as Id<"pokemon">[]);
+      setSelectedPokemon(prev => ({ ...prev, opponent: team2[0] as Id<"pokemon"> }));
     }
   };
 
@@ -272,13 +272,12 @@ function TeamSelector({
     <div>
       <h3 className="mb-3">{label}</h3>
       <div className="flex gap-3 justify-center">
-        {team.map((pokemonId, index) => (
+        {team.map((pokemonId) => (
           <PokemonCard 
             key={pokemonId}
             pokemonId={pokemonId}
             isSelected={selected === pokemonId}
             onClick={() => onSelect(pokemonId)}
-            index={index + 1}
           />
         ))}
       </div>
@@ -289,13 +288,11 @@ function TeamSelector({
 function PokemonCard({ 
   pokemonId, 
   isSelected, 
-  onClick, 
-  index 
+  onClick
 }: { 
   pokemonId: Id<"pokemon">;
   isSelected: boolean;
   onClick: () => void;
-  index: number;
 }) {
   const pokemon = useQuery(api.pokemon.getPokemon, { id: pokemonId });
 

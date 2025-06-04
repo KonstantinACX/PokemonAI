@@ -57,7 +57,8 @@ function BattlePage() {
       const timer = setTimeout(() => {
         if (isOpponentSelecting) {
           // AI needs to select a new Pokemon
-          const availablePokemon = battle.player2Team.filter(pokemon => 
+          const availablePokemon = battle.player2Team.filter((pokemon): pokemon is NonNullable<typeof pokemon> => 
+            pokemon !== null && 
             !battle.player2FaintedPokemon.includes(pokemon._id) && 
             pokemon._id !== battle.player2ActivePokemon
           );
@@ -115,7 +116,8 @@ function BattlePage() {
                   </h3>
                   <div className="grid grid-cols-3 gap-3 max-w-md mx-auto">
                     {battle.player1Team
-                      .filter(pokemon => 
+                      .filter((pokemon): pokemon is NonNullable<typeof pokemon> => 
+                        pokemon !== null && 
                         !battle.player1FaintedPokemon.includes(pokemon._id) && 
                         pokemon._id !== battle.player1ActivePokemon
                       )
@@ -176,7 +178,8 @@ function BattlePage() {
                       </div>
                       
                       {/* Pokemon Switching Option */}
-                      {battle.player1Team.filter(pokemon => 
+                      {battle.player1Team.filter((pokemon): pokemon is NonNullable<typeof pokemon> => 
+                        pokemon !== null && 
                         !battle.player1FaintedPokemon.includes(pokemon._id) && 
                         pokemon._id !== battle.player1ActivePokemon
                       ).length > 0 && (
@@ -193,7 +196,8 @@ function BattlePage() {
                               <div className="text-sm mb-2 opacity-70">Choose Pokemon to switch to:</div>
                               <div className="grid grid-cols-2 gap-2">
                                 {battle.player1Team
-                                  .filter(pokemon => 
+                                  .filter((pokemon): pokemon is NonNullable<typeof pokemon> => 
+                                    pokemon !== null && 
                                     !battle.player1FaintedPokemon.includes(pokemon._id) && 
                                     pokemon._id !== battle.player1ActivePokemon
                                   )

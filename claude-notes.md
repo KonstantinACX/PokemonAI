@@ -27,8 +27,11 @@
 - **Faster Battles**: Doubled attack damage for quicker battle resolution
 - **Improved UI**: Vertical layout, authentication flows, visual enhancements
 - **Image Generation Reliability**: Multiple API fallbacks, retry logic, proper error handling
+- **Status Effect System**: Poison, burn, paralyze, freeze, sleep with proper battle mechanics
 
 ## Session Commits (Latest)
+- 9b115d9: feat: Add comprehensive status effect system
+- 8624538: fix: Add loading state and optimize Pokemon team generation
 - 73d6485: feat: Improve Pokemon image generation reliability
 - 8a53a31: fix: Correct import path in catch route
 - b7b3d4e: feat: Add Pokemon catching mode
@@ -51,6 +54,8 @@
 - Real-time HP tracking and battle log
 - Stat modification system (-6 to +6 stages)
 - Pokemon switching and team management
+- Comprehensive status effect system (poison, burn, paralyze, freeze, sleep)
+- Status effects with proper turn-based mechanics and visual indicators
 
 ### Pokemon Management
 - AI-generated Pokemon with unique names, stats, types
