@@ -222,12 +222,13 @@ export const switchPokemon = mutation({
 
     const isPlayer1Selecting = battle.status === "player1_selecting";
     const isPlayer2Selecting = battle.status === "player2_selecting";
+    const isActiveVoluntarySwitch = battle.status === "active" && battle.currentTurn === "player1";
     
-    if (!isPlayer1Selecting && !isPlayer2Selecting) {
-      throw new Error("Not in Pokemon selection phase");
+    if (!isPlayer1Selecting && !isPlayer2Selecting && !isActiveVoluntarySwitch) {
+      throw new Error("Not allowed to switch Pokemon at this time");
     }
 
-    const newLog = [...battle.battleLog, `${isPlayer1Selecting ? "Player 1" : "Player 2"} sent out ${pokemon.name}!`];
+    const newLog = [...battle.battleLog, `${isPlayer1Selecting || isActiveVoluntarySwitch ? "Player 1" : "Player 2"} sent out ${pokemon.name}!`];
 
     if (isPlayer1Selecting) {
       await ctx.db.patch(args.battleId, {
@@ -237,12 +238,20 @@ export const switchPokemon = mutation({
         currentTurn: "player1", // Player who just switched gets first turn
         battleLog: newLog,
       });
-    } else {
+    } else if (isPlayer2Selecting) {
       await ctx.db.patch(args.battleId, {
         player2ActivePokemon: args.pokemonId,
         player2ActiveHp: pokemon.hp,
         status: "active", 
         currentTurn: "player2", // Player who just switched gets first turn
+        battleLog: newLog,
+      });
+    } else if (isActiveVoluntarySwitch) {
+      // Voluntary switch during active battle - player loses their turn
+      await ctx.db.patch(args.battleId, {
+        player1ActivePokemon: args.pokemonId,
+        player1ActiveHp: pokemon.hp,
+        currentTurn: "player2", // Switch ends player's turn
         battleLog: newLog,
       });
     }
@@ -253,7 +262,7 @@ export const performAIMove = mutation({
   args: {
     battleId: v.id("battles"),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<void> => {
     const battle = await ctx.db.get(args.battleId);
     if (!battle || battle.status !== "active" || battle.currentTurn !== "player2") {
       return; // Only AI moves when it's player2's turn
@@ -266,7 +275,7 @@ export const performAIMove = mutation({
     const moveIndex = Math.floor(Math.random() * pokemon2.moves.length);
     
     // Use the existing performMove logic by calling it
-    return await ctx.runMutation(api.battles.performMove, {
+    await ctx.runMutation(api.battles.performMove, {
       battleId: args.battleId,
       moveIndex,
     });

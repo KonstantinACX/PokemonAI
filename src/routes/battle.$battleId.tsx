@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { ArrowLeft, Heart, Shield, Sword, Zap } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 
@@ -22,6 +22,7 @@ function BattlePage() {
   const performMove = useMutation(api.battles.performMove);
   const performAIMove = useMutation(api.battles.performAIMove);
   const switchPokemon = useMutation(api.battles.switchPokemon);
+  const [showSwitchOptions, setShowSwitchOptions] = useState(false);
 
   if (!battle) {
     return <div>Battle not found</div>;
@@ -142,25 +143,72 @@ function BattlePage() {
               {isActive && (
                 <div>
                   <h3 className="text-center mb-4">
-                    {isPlayerTurn ? "Choose your move!" : "Opponent is choosing..."}
+                    {isPlayerTurn ? "Choose your action!" : "Opponent is choosing..."}
                   </h3>
                   
                   {isPlayerTurn && currentPokemon && (
-                    <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
-                      {currentPokemon.moves.map((move, index) => (
-                        <button
-                          key={index}
-                          className="btn btn-outline"
-                          onClick={() => handleMove(index)}
-                        >
-                          <div className="text-left">
-                            <div className="font-bold">{move.name}</div>
-                            <div className="text-xs opacity-70">
-                              {move.type} • {move.power} PWR
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                        {currentPokemon.moves.map((move, index) => (
+                          <button
+                            key={index}
+                            className="btn btn-outline"
+                            onClick={() => handleMove(index)}
+                          >
+                            <div className="text-left">
+                              <div className="font-bold">{move.name}</div>
+                              <div className="text-xs opacity-70">
+                                {move.type} • {move.power} PWR
+                              </div>
                             </div>
-                          </div>
-                        </button>
-                      ))}
+                          </button>
+                        ))}
+                      </div>
+                      
+                      {/* Pokemon Switching Option */}
+                      {battle.player1Team.filter(pokemon => 
+                        !battle.player1FaintedPokemon.includes(pokemon._id) && 
+                        pokemon._id !== battle.player1ActivePokemon
+                      ).length > 0 && (
+                        <div className="text-center">
+                          <button 
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => setShowSwitchOptions(!showSwitchOptions)}
+                          >
+                            Switch Pokemon
+                          </button>
+                          
+                          {showSwitchOptions && (
+                            <div className="mt-3 p-3 bg-base-200 rounded-lg">
+                              <div className="text-sm mb-2 opacity-70">Choose Pokemon to switch to:</div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {battle.player1Team
+                                  .filter(pokemon => 
+                                    !battle.player1FaintedPokemon.includes(pokemon._id) && 
+                                    pokemon._id !== battle.player1ActivePokemon
+                                  )
+                                  .map((pokemon) => (
+                                    <button
+                                      key={pokemon._id}
+                                      className="btn btn-outline btn-sm"
+                                      onClick={() => {
+                                        handleSwitchPokemon(pokemon._id);
+                                        setShowSwitchOptions(false);
+                                      }}
+                                    >
+                                      <div className="text-center">
+                                        <div className="font-bold text-xs">{pokemon.name}</div>
+                                        <div className="text-xs opacity-70">
+                                          HP: {pokemon.hp}
+                                        </div>
+                                      </div>
+                                    </button>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

@@ -20,14 +20,26 @@ const movePool = [
   { name: "Shadow Ball", type: "Ghost", power: 80, accuracy: 100 },
 ];
 
-const pokemonNames = [
-  "Blazerix", "Aquasaur", "Floraxis", "Voltrix", "Psywave", "Frostbite", 
-  "Draconus", "Punchclaw", "Windstorm", "Venomfang", "Earthshaker", "Stoneguard",
-  "Speedbug", "Phantomis", "Steelcrest", "Shadowmaw", "Sparklewings", "Normalton"
+const nameRoots = [
+  "Blaze", "Aqua", "Flora", "Volt", "Psy", "Frost", "Draco", "Punch", "Wind", 
+  "Venom", "Earth", "Stone", "Speed", "Phantom", "Steel", "Shadow", "Sparkle", "Thunder",
+  "Crystal", "Inferno", "Tidal", "Jungle", "Storm", "Mystic", "Glacier", "Cosmos",
+  "Crimson", "Azure", "Emerald", "Golden", "Silver", "Obsidian", "Prismatic", "Nebula"
+];
+
+const nameSuffixes = [
+  "rix", "saur", "axis", "wave", "bite", "nus", "claw", "storm", "fang", "guard",
+  "bug", "mis", "crest", "maw", "wings", "ton", "fury", "blade", "heart", "soul",
+  "fire", "flow", "wing", "tail", "horn", "eye", "claw", "fist", "strike", "roar",
+  "whisper", "echo", "spark", "flame", "frost", "glow", "shine", "burst", "dash"
 ];
 
 function generateRandomPokemon() {
-  const name = pokemonNames[Math.floor(Math.random() * pokemonNames.length)];
+  // Generate unique name by combining root + suffix
+  const root = nameRoots[Math.floor(Math.random() * nameRoots.length)];
+  const suffix = nameSuffixes[Math.floor(Math.random() * nameSuffixes.length)];
+  const name = root + suffix;
+  
   const primaryType = pokemonTypes[Math.floor(Math.random() * pokemonTypes.length)];
   const hasSecondaryType = Math.random() > 0.7;
   const types = hasSecondaryType 
@@ -53,7 +65,7 @@ function generateRandomPokemon() {
   }
 
   return {
-    name: `${name}-${Math.floor(Math.random() * 1000)}`,
+    name,
     types,
     hp: Math.floor(Math.random() * 50) + 80, // 80-130 HP
     attack: Math.floor(Math.random() * 40) + 60, // 60-100 Attack
