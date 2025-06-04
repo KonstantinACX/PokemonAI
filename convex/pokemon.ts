@@ -106,23 +106,17 @@ export const getPokemon = query({
 });
 
 async function generatePokemonImage(pokemon: { name: string; types: string[]; description: string }): Promise<string> {
-  // Generate anime-style Pokemon image using a placeholder service
-  // In a real implementation, you would use DALL-E, Midjourney, or similar
-  const prompt = `anime style pokemon character, ${pokemon.name}, ${pokemon.types.join(" and ")} type, ${pokemon.description}, cute, colorful, high quality anime art, pokemon style, clean background`;
+  // Generate anime-style Pokemon image using Pollinations AI (free service)
+  const prompt = `anime style pokemon creature, ${pokemon.name}, ${pokemon.types.join(" and ")} type pokemon, cute monster, colorful, high quality anime art, pokemon trading card art style, clean white background, digital art, kawaii, vibrant colors`;
   
-  // For now, return a placeholder image that represents the Pokemon
-  // This could be replaced with actual AI image generation
-  const typeColors = {
-    Fire: "ff6666", Water: "6666ff", Grass: "66ff66", Electric: "ffff66",
-    Psychic: "ff66ff", Ice: "66ffff", Dragon: "9966ff", Fighting: "ff9966",
-    Flying: "ccccff", Poison: "9966cc", Ground: "cc9966", Rock: "996633",
-    Bug: "99cc66", Ghost: "9999cc", Steel: "cccccc", Dark: "666666",
-    Fairy: "ffccff", Normal: "cccccc"
-  };
+  // Encode the prompt for URL
+  const encodedPrompt = encodeURIComponent(prompt);
   
-  const primaryColor = typeColors[pokemon.types[0] as keyof typeof typeColors] || "cccccc";
-  // Using a placeholder service that can generate colored images with text
-  return `https://via.placeholder.com/200x200/${primaryColor}/000000?text=${encodeURIComponent(pokemon.name)}`;
+  // Use Pollinations API for free AI image generation
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=400&seed=${Math.floor(Math.random() * 10000)}`;
+  
+  // Return the image URL directly - let the frontend handle loading
+  return imageUrl;
 }
 
 export const generatePokemonWithImage = action({
