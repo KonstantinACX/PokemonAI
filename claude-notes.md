@@ -31,6 +31,12 @@
 - **Level System**: Added levels and XP to all Pokemon (all start at level 5) with UI display
 
 ## Session Commits (Latest)
+- [current]: fix: Resolve sign-in functionality after server restart
+- 284825d: docs: Update battleType schema comment for clarity
+- 23cd77a: fix: Fix schema validation by making battleType optional
+- e612fa9: fix: Fix build errors and Clerk auth integration
+- 04a80e1: fix: Fix level-up notification dismiss functionality
+- c903134: feat: Implement complete multiplayer battle system
 - 359a9a2: feat: Add levels and XP system to Pokemon
 - 9b115d9: feat: Add comprehensive status effect system
 - 8624538: fix: Add loading state and optimize Pokemon team generation
