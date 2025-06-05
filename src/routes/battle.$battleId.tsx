@@ -95,23 +95,11 @@ function BattlePage() {
   // Check for battle end and show level-up notifications
   useEffect(() => {
     if (battle?.status === "player1_wins" || battle?.status === "player2_wins") {
-      // For now, show a simple notification that XP was gained
-      // In a real implementation, you'd get the level-up results from the backend
-      const sampleNotifications = [
-        {
-          pokemonName: battle.pokemon1?.name || "Pokemon",
-          oldLevel: 5,
-          newLevel: 6,
-          xpGained: 175,
-        }
-      ];
-      
-      // Only show notifications once per battle
-      if (levelUpNotifications.length === 0) {
-        setLevelUpNotifications(sampleNotifications);
-      }
+      // TODO: Get actual level-up results from backend
+      // For now, we'll show notifications when the XP awarding system is properly integrated
+      console.log("Battle ended, XP should be awarded to Pokemon");
     }
-  }, [battle?.status, battle?.pokemon1?.name, levelUpNotifications.length]);
+  }, [battle?.status]);
 
   if (!battle) {
     return <div>Battle not found</div>;
@@ -313,7 +301,10 @@ function BattlePage() {
       {/* Level Up Notifications */}
       <LevelUpNotifications 
         notifications={levelUpNotifications}
-        onDismiss={() => setLevelUpNotifications([])}
+        onDismiss={() => {
+          console.log("Clearing level up notifications");
+          setLevelUpNotifications([]);
+        }}
       />
     </div>
   );
@@ -519,8 +510,22 @@ function LevelUpNotifications({
 }) {
   if (notifications.length === 0) return null;
 
+  const handleDismiss = () => {
+    console.log("Dismissing level up notifications");
+    onDismiss();
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleDismiss();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]"
+      onClick={handleBackdropClick}
+    >
       <div className="bg-base-100 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
         <h3 className="text-lg font-bold mb-4 text-center">🎉 Level Up!</h3>
         
@@ -543,7 +548,8 @@ function LevelUpNotifications({
         <div className="text-center mt-4">
           <button 
             className="btn btn-primary"
-            onClick={onDismiss}
+            onClick={handleDismiss}
+            type="button"
           >
             Continue
           </button>
