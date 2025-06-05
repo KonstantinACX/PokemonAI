@@ -151,12 +151,19 @@ function BattlePage() {
     }
   }, [battle?.status]);
 
+  // Initialize battle log length on first load
+  useEffect(() => {
+    if (battle?.battleLog && lastBattleLogLength === 0) {
+      setLastBattleLogLength(battle.battleLog.length);
+    }
+  }, [battle?.battleLog, lastBattleLogLength]);
+
   // Detect new battle log messages and show notifications
   useEffect(() => {
-    if (battle?.battleLog) {
+    if (battle?.battleLog && lastBattleLogLength > 0) {
       const currentLogLength = battle.battleLog.length;
       
-      if (lastBattleLogLength > 0 && currentLogLength > lastBattleLogLength) {
+      if (currentLogLength > lastBattleLogLength) {
         // New messages have been added
         const newMessages = battle.battleLog.slice(lastBattleLogLength);
         
@@ -176,9 +183,9 @@ function BattlePage() {
             );
           }, 1000);
         });
+        
+        setLastBattleLogLength(currentLogLength);
       }
-      
-      setLastBattleLogLength(currentLogLength);
     }
   }, [battle?.battleLog, lastBattleLogLength]);
 
