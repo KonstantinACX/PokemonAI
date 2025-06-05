@@ -90,21 +90,21 @@ function BattlePage() {
   
   // For AI battles, user is always player1
   const isPlayerTurn = battle?.battleType === "ai" 
-    ? battle?.currentTurn === "player1"
-    : (isCurrentUserPlayer1 && battle?.currentTurn === "player1") || 
-      (isCurrentUserPlayer2 && battle?.currentTurn === "player2");
+    ? Boolean(battle?.currentTurn === "player1")
+    : Boolean((isCurrentUserPlayer1 && battle?.currentTurn === "player1") || 
+              (isCurrentUserPlayer2 && battle?.currentTurn === "player2"));
       
   const currentPokemon = isPlayerTurn ? battle?.pokemon1 : battle?.pokemon2;
-  const isGameOver = battle?.status === "player1_wins" || battle?.status === "player2_wins";
+  const isGameOver = Boolean(battle?.status === "player1_wins" || battle?.status === "player2_wins");
   const isPlayerSelecting = battle?.battleType === "ai" 
-    ? battle?.status === "player1_selecting"
-    : (isCurrentUserPlayer1 && battle?.status === "player1_selecting") ||
-      (isCurrentUserPlayer2 && battle?.status === "player2_selecting");
+    ? Boolean(battle?.status === "player1_selecting")
+    : Boolean((isCurrentUserPlayer1 && battle?.status === "player1_selecting") ||
+              (isCurrentUserPlayer2 && battle?.status === "player2_selecting"));
   const isOpponentSelecting = battle?.battleType === "ai" 
-    ? battle?.status === "player2_selecting"
-    : (isCurrentUserPlayer1 && battle?.status === "player2_selecting") ||
-      (isCurrentUserPlayer2 && battle?.status === "player1_selecting");
-  const isActive = battle?.status === "active";
+    ? Boolean(battle?.status === "player2_selecting")
+    : Boolean((isCurrentUserPlayer1 && battle?.status === "player2_selecting") ||
+              (isCurrentUserPlayer2 && battle?.status === "player1_selecting"));
+  const isActive = Boolean(battle?.status === "active");
 
   // Auto-trigger AI move when it's opponent's turn or AI needs to select Pokemon (AI battles only)
   useEffect(() => {
