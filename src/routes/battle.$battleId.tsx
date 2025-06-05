@@ -61,6 +61,12 @@ function BattlePage() {
     newLevel: number;
     xpGained: number;
   }>>([]);
+  const [battleLogNotifications, setBattleLogNotifications] = useState<Array<{
+    id: string;
+    message: string;
+    timestamp: number;
+  }>>([]);
+  const [lastBattleLogLength, setLastBattleLogLength] = useState(0);
 
   const handleMove = useCallback(async (moveIndex: number) => {
     await performMove({
@@ -144,6 +150,37 @@ function BattlePage() {
       console.log("Battle ended, XP should be awarded to Pokemon");
     }
   }, [battle?.status]);
+
+  // Detect new battle log messages and show notifications
+  useEffect(() => {
+    if (battle?.battleLog) {
+      const currentLogLength = battle.battleLog.length;
+      
+      if (lastBattleLogLength > 0 && currentLogLength > lastBattleLogLength) {
+        // New messages have been added
+        const newMessages = battle.battleLog.slice(lastBattleLogLength);
+        
+        newMessages.forEach((message, index) => {
+          const notification = {
+            id: `${Date.now()}-${index}`,
+            message,
+            timestamp: Date.now(),
+          };
+          
+          setBattleLogNotifications(prev => [...prev, notification]);
+          
+          // Remove notification after 1 second
+          setTimeout(() => {
+            setBattleLogNotifications(prev => 
+              prev.filter(n => n.id !== notification.id)
+            );
+          }, 1000);
+        });
+      }
+      
+      setLastBattleLogLength(currentLogLength);
+    }
+  }, [battle?.battleLog, lastBattleLogLength]);
 
   if (!battle) {
     return <div>Battle not found</div>;
@@ -408,6 +445,18 @@ function BattlePage() {
           setLevelUpNotifications([]);
         }}
       />
+
+      {/* Battle Log Notifications */}
+      <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 space-y-2 pointer-events-none">
+        {battleLogNotifications.map((notification) => (
+          <div
+            key={notification.id}
+            className="alert alert-info shadow-lg animate-bounce max-w-md"
+          >
+            <span className="text-sm font-medium text-center">{notification.message}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
