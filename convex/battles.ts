@@ -62,7 +62,8 @@ function calculateDamage(
   }
   
   // Basic damage formula: ((Attack / Defense) * MovePower * Effectiveness) / 5 (doubled from /10)
-  const baseDamage = Math.floor(((modifiedAttack / modifiedDefense) * attackerMove.power * effectiveness) / 5);
+  // Increased by 1.5x to speed up battles
+  const baseDamage = Math.floor(((modifiedAttack / modifiedDefense) * attackerMove.power * effectiveness * 1.5) / 5);
   
   // Add some randomness (±20%)
   const variance = Math.random() * 0.4 - 0.2; // -20% to +20%

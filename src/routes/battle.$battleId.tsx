@@ -363,7 +363,22 @@ function BattlePage() {
             <div className="text-center mb-6">
               <div className="alert alert-success">
                 <h3 className="font-bold">
-                  {battle.status === "player1_wins" ? "You Win!" : "You Lose!"}
+                  {(() => {
+                    if (battle?.battleType === "ai") {
+                      return battle.status === "player1_wins" ? "You Win!" : "You Lose!";
+                    } else {
+                      // Multiplayer battle
+                      const userWon = (isCurrentUserPlayer1 && battle.status === "player1_wins") ||
+                                      (isCurrentUserPlayer2 && battle.status === "player2_wins");
+                      
+                      if (userWon) {
+                        return "You Win!";
+                      } else {
+                        const opponentName = isCurrentUserPlayer1 ? player2?.name : player1?.name;
+                        return `${opponentName || "Opponent"} Wins!`;
+                      }
+                    }
+                  })()}
                 </h3>
               </div>
               <Link to="/" className="btn btn-primary mt-4">
