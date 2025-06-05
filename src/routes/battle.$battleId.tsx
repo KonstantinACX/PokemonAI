@@ -124,11 +124,14 @@ function BattlePage() {
                       .map((pokemon) => (
                         <button
                           key={pokemon._id}
-                          className="btn btn-outline"
+                          className="btn btn-outline min-w-0"
                           onClick={() => void handleSwitchPokemon(pokemon._id)}
                         >
-                          <div className="text-center">
-                            <div className="font-bold text-sm">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level || 5}</span></div>
+                          <div className="text-center w-full">
+                            <div className="font-bold text-sm truncate mb-1">
+                              <span className="block truncate">{pokemon.name}</span>
+                              <span className="font-normal opacity-70 text-xs">Lv.{pokemon.level || 5}</span>
+                            </div>
                             <div className="flex gap-1 justify-center mb-1">
                               {pokemon.types.map((type: string) => (
                                 <span key={type} className="badge badge-primary badge-xs">
@@ -204,14 +207,17 @@ function BattlePage() {
                                   .map((pokemon) => (
                                     <button
                                       key={pokemon._id}
-                                      className="btn btn-outline btn-sm"
+                                      className="btn btn-outline btn-sm min-w-0"
                                       onClick={() => {
                                         void handleSwitchPokemon(pokemon._id);
                                         setShowSwitchOptions(false);
                                       }}
                                     >
-                                      <div className="text-center">
-                                        <div className="font-bold text-xs">{pokemon.name} <span className="font-normal opacity-70">Lv.{pokemon.level || 5}</span></div>
+                                      <div className="text-center w-full">
+                                        <div className="font-bold text-xs truncate mb-1">
+                                          <span className="block truncate">{pokemon.name}</span>
+                                          <span className="font-normal opacity-70">Lv.{pokemon.level || 5}</span>
+                                        </div>
                                         <div className="flex gap-1 justify-center mb-1">
                                           {pokemon.types.map((type: string) => (
                                             <span key={type} className="badge badge-primary badge-xs">
