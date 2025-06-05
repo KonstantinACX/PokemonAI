@@ -546,6 +546,7 @@ export const getBattle = query({
 
 // Helper function to award XP to all Pokemon after battle
 async function awardBattleXp(ctx: any, battle: any, player1Won: boolean) {
+  console.log("Awarding XP for battle end, player1Won:", player1Won);
   const BATTLE_XP = {
     PARTICIPATION: 50,    // XP for participating in battle
     VICTORY: 100,        // Additional XP for winning team
@@ -568,10 +569,15 @@ async function awardBattleXp(ctx: any, battle: any, player1Won: boolean) {
     }
     
     // Award XP and check for level up
-    await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
-      pokemonId,
-      xpGained: totalXp,
-    });
+    try {
+      console.log(`Awarding ${totalXp} XP to Pokemon ${pokemonId}`);
+      await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+        pokemonId,
+        xpGained: totalXp,
+      });
+    } catch (error) {
+      console.error("Error awarding XP to Pokemon:", pokemonId, error);
+    }
   }
   
   // Award XP to player 2 team  
