@@ -487,7 +487,7 @@ function PokemonDisplay({
   const hpColor = hpPercentage > 60 ? "success" : hpPercentage > 30 ? "warning" : "error";
 
   return (
-    <div className={`card bg-base-100 ${isActive ? "ring-2 ring-primary" : ""}`}>
+    <div className={`card bg-base-100 ${isActive ? "ring-2 ring-primary" : ""} transform scale-90 origin-top`}>
       <div className="card-body p-3">
         <div className="text-xs opacity-70 mb-1">{label}</div>
         
