@@ -39,6 +39,9 @@ function BattlePage() {
   const performAIMove = useMutation(api.battles.performAIMove);
   const switchPokemon = useMutation(api.battles.switchPokemon);
   
+  // Get current user for multiplayer turn determination
+  const currentUser = useQuery(api.users.getCurrentUser);
+  
   // For multiplayer battles, get player names
   const player1 = useQuery(api.users.getUser, 
     battle?.battleType === "multiplayer" && battle?.player1Id 
@@ -72,11 +75,26 @@ function BattlePage() {
     });
   }, [switchPokemon, battleId]);
 
-  const isPlayerTurn = battle?.currentTurn === "player1";
+  // Determine which player the current user is in multiplayer battles
+  const isCurrentUserPlayer1 = battle?.battleType === "multiplayer" && currentUser && battle?.player1Id === currentUser._id;
+  const isCurrentUserPlayer2 = battle?.battleType === "multiplayer" && currentUser && battle?.player2Id === currentUser._id;
+  
+  // For AI battles, user is always player1
+  const isPlayerTurn = battle?.battleType === "ai" 
+    ? battle?.currentTurn === "player1"
+    : (isCurrentUserPlayer1 && battle?.currentTurn === "player1") || 
+      (isCurrentUserPlayer2 && battle?.currentTurn === "player2");
+      
   const currentPokemon = isPlayerTurn ? battle?.pokemon1 : battle?.pokemon2;
   const isGameOver = battle?.status === "player1_wins" || battle?.status === "player2_wins";
-  const isPlayerSelecting = battle?.status === "player1_selecting";
-  const isOpponentSelecting = battle?.status === "player2_selecting";
+  const isPlayerSelecting = battle?.battleType === "ai" 
+    ? battle?.status === "player1_selecting"
+    : (isCurrentUserPlayer1 && battle?.status === "player1_selecting") ||
+      (isCurrentUserPlayer2 && battle?.status === "player2_selecting");
+  const isOpponentSelecting = battle?.battleType === "ai" 
+    ? battle?.status === "player2_selecting"
+    : (isCurrentUserPlayer1 && battle?.status === "player2_selecting") ||
+      (isCurrentUserPlayer2 && battle?.status === "player1_selecting");
   const isActive = battle?.status === "active";
 
   // Auto-trigger AI move when it's opponent's turn or AI needs to select Pokemon (AI battles only)
@@ -161,12 +179,18 @@ function BattlePage() {
                     Choose your next Pokemon!
                   </h3>
                   <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto">
-                    {battle.player1Team
-                      .filter((pokemon): pokemon is NonNullable<typeof pokemon> => 
+                    {(() => {
+                      const userTeam = (battle?.battleType === "ai" || isCurrentUserPlayer1) ? battle.player1Team : battle.player2Team;
+                      const userFaintedPokemon = (battle?.battleType === "ai" || isCurrentUserPlayer1) ? battle.player1FaintedPokemon : battle.player2FaintedPokemon;
+                      const userActivePokemon = (battle?.battleType === "ai" || isCurrentUserPlayer1) ? battle.player1ActivePokemon : battle.player2ActivePokemon;
+                      
+                      return userTeam.filter((pokemon): pokemon is NonNullable<typeof pokemon> => 
                         pokemon !== null && 
-                        !battle.player1FaintedPokemon.includes(pokemon._id) && 
-                        pokemon._id !== battle.player1ActivePokemon
-                      )
+                        !userFaintedPokemon.includes(pokemon._id) && 
+                        pokemon._id !== userActivePokemon
+                      );
+                    })()
+                      
                       .map((pokemon) => (
                         <button
                           key={pokemon._id}
@@ -197,14 +221,30 @@ function BattlePage() {
               
               {isOpponentSelecting && (
                 <h3 className="text-center mb-4">
-                  Opponent is choosing their next Pokemon...
+                  {battle?.battleType === "multiplayer" 
+                    ? (() => {
+                        const opponentName = isCurrentUserPlayer1 ? player2?.name : player1?.name;
+                        return `${opponentName || "Opponent"} is choosing their next Pokemon...`;
+                      })()
+                    : "Opponent is choosing their next Pokemon..."
+                  }
                 </h3>
               )}
               
               {isActive && (
                 <div>
                   <h3 className="text-center mb-4">
-                    {isPlayerTurn ? "Choose your action!" : "Opponent is choosing..."}
+                    {battle?.battleType === "multiplayer" 
+                      ? isPlayerTurn 
+                        ? "Your turn! Choose your action!" 
+                        : (() => {
+                            const opponentName = isCurrentUserPlayer1 ? player2?.name : player1?.name;
+                            return `${opponentName || "Opponent"} is choosing...`;
+                          })()
+                      : isPlayerTurn 
+                        ? "Choose your action!" 
+                        : "Opponent is choosing..."
+                    }
                   </h3>
                   
                   {isPlayerTurn && currentPokemon && (
