@@ -488,93 +488,103 @@ function PokemonDisplay({
 
   return (
     <div className={`card bg-base-100 ${isActive ? "ring-2 ring-primary" : ""}`}>
-      <div className="card-body">
-        <div className="card-title text-sm opacity-70">{label}</div>
+      <div className="card-body p-3">
+        <div className="text-xs opacity-70 mb-1">{label}</div>
         
-        <h3 className="text-lg font-bold">{pokemon.name} <span className="text-sm font-normal opacity-70">Lv.{pokemon.level || 5}</span></h3>
-        
-        {/* Pokemon Image */}
-        <PokemonImage 
-          imageUrl={pokemon.imageUrl} 
-          name={pokemon.name} 
-        />
-        
-        <div className="flex gap-1 mb-3">
-          {pokemon.types.map((type: string) => (
-            <span key={type} className="badge badge-primary badge-sm">
-              {type}
-            </span>
-          ))}
-        </div>
-
-        {/* Status Effect Display */}
-        {statusEffect && (
-          <div className="mb-3">
-            <StatusEffectBadge statusEffect={statusEffect} />
-          </div>
-        )}
-
-        <div className="space-y-2">
+        {/* Header: Name, Level, Types */}
+        <div className="flex items-center justify-between mb-2">
           <div>
-            <div className="flex justify-between text-sm">
-              <span>HP</span>
-              <span>{currentHp}/{pokemon.hp}</span>
+            <h3 className="text-sm font-bold">{pokemon.name}</h3>
+            <div className="flex gap-1 mt-1">
+              {pokemon.types.map((type: string) => (
+                <span key={type} className="badge badge-primary badge-xs">
+                  {type}
+                </span>
+              ))}
             </div>
-            <progress 
-              className={`progress progress-${hpColor} w-full`} 
-              value={currentHp} 
-              max={pokemon.hp}
-            />
           </div>
-
-          {/* XP Progress Bar */}
-          <div>
-            <div className="flex justify-between text-xs opacity-70">
-              <span>XP</span>
-              <span>{pokemon.xp || 0} / {getXpForNextLevel(pokemon.level || 5)}</span>
-            </div>
-            <progress 
-              className="progress progress-info w-full h-1" 
-              value={(pokemon.xp || 0) - getXpForCurrentLevel(pokemon.level || 5)}
-              max={getXpForNextLevel(pokemon.level || 5) - getXpForCurrentLevel(pokemon.level || 5)}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="flex items-center gap-1">
-              <Sword className="w-3 h-3" />
-              <span className={getStatColor(pokemon.attack, 'attack')}>
-                {getStatAdjective(pokemon.attack, 'attack')}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Shield className="w-3 h-3" />
-              <span className={getStatColor(pokemon.defense, 'defense')}>
-                {getStatAdjective(pokemon.defense, 'defense')}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Zap className="w-3 h-3" />
-              <span className={getStatColor(pokemon.speed, 'speed')}>
-                {getStatAdjective(pokemon.speed, 'speed')}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Heart className="w-3 h-3" />
-              <span className={getStatColor(pokemon.hp, 'hp')}>
-                {getStatAdjective(pokemon.hp, 'hp')}
-              </span>
-            </div>
+          <div className="text-right">
+            <div className="text-xs opacity-70">Lv.{pokemon.level || 5}</div>
+            {statusEffect && (
+              <div className="mt-1">
+                <StatusEffectBadge statusEffect={statusEffect} />
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="mt-3">
+        {/* Pokemon Image - Smaller */}
+        <div className="flex justify-center mb-2">
+          <div className="w-20 h-20">
+            <PokemonImage 
+              imageUrl={pokemon.imageUrl} 
+              name={pokemon.name} 
+            />
+          </div>
+        </div>
+
+        {/* HP Bar */}
+        <div className="mb-2">
+          <div className="flex justify-between text-xs mb-1">
+            <span>HP</span>
+            <span>{currentHp}/{pokemon.hp}</span>
+          </div>
+          <progress 
+            className={`progress progress-${hpColor} w-full h-2`} 
+            value={currentHp} 
+            max={pokemon.hp}
+          />
+        </div>
+
+        {/* XP Bar - Condensed */}
+        <div className="mb-2">
+          <div className="flex justify-between text-xs opacity-70 mb-1">
+            <span>XP</span>
+            <span>{pokemon.xp || 0}/{getXpForNextLevel(pokemon.level || 5)}</span>
+          </div>
+          <progress 
+            className="progress progress-info w-full h-1" 
+            value={(pokemon.xp || 0) - getXpForCurrentLevel(pokemon.level || 5)}
+            max={getXpForNextLevel(pokemon.level || 5) - getXpForCurrentLevel(pokemon.level || 5)}
+          />
+        </div>
+
+        {/* Stats - More Compact */}
+        <div className="grid grid-cols-4 gap-1 text-xs mb-2">
+          <div className="text-center">
+            <Sword className="w-3 h-3 mx-auto" />
+            <div className={`text-xs ${getStatColor(pokemon.attack, 'attack')}`}>
+              {getStatAdjective(pokemon.attack, 'attack').substring(0,3)}
+            </div>
+          </div>
+          <div className="text-center">
+            <Shield className="w-3 h-3 mx-auto" />
+            <div className={`text-xs ${getStatColor(pokemon.defense, 'defense')}`}>
+              {getStatAdjective(pokemon.defense, 'defense').substring(0,3)}
+            </div>
+          </div>
+          <div className="text-center">
+            <Zap className="w-3 h-3 mx-auto" />
+            <div className={`text-xs ${getStatColor(pokemon.speed, 'speed')}`}>
+              {getStatAdjective(pokemon.speed, 'speed').substring(0,3)}
+            </div>
+          </div>
+          <div className="text-center">
+            <Heart className="w-3 h-3 mx-auto" />
+            <div className={`text-xs ${getStatColor(pokemon.hp, 'hp')}`}>
+              {getStatAdjective(pokemon.hp, 'hp').substring(0,3)}
+            </div>
+          </div>
+        </div>
+
+        {/* Moves - Simplified */}
+        <div>
           <div className="text-xs opacity-70 mb-1">Moves:</div>
-          <div className="space-y-1">
+          <div className="grid grid-cols-2 gap-1">
             {pokemon.moves.map((move: any, index: number) => (
-              <div key={index} className="text-xs bg-base-200 p-1 rounded">
-                <span className="font-semibold">{move.name}</span>
-                <span className="opacity-70"> ({move.type}, {move.power === 0 ? "STATUS" : `${move.power} PWR`})</span>
+              <div key={index} className="text-xs bg-base-200 p-1 rounded text-center">
+                <div className="font-semibold truncate">{move.name}</div>
+                <div className="opacity-70">{move.power === 0 ? "STA" : move.power}</div>
               </div>
             ))}
           </div>
