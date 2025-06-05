@@ -197,14 +197,32 @@ function HomePage() {
                 <div className="card-body">
                   <h2 className="card-title">Multiplayer Battle</h2>
                   <p>Battle against other players online in real-time!</p>
+                  <div className="text-xs opacity-70 mb-3">
+                    Collection: {userCollection.length} Pokemon
+                  </div>
                   <div className="card-actions justify-center">
-                    <Link 
-                      to="/multiplayer"
-                      className="btn btn-success btn-lg gap-2"
-                    >
-                      <Users className="w-5 h-5" />
-                      Battle Players
-                    </Link>
+                    {userCollection.length >= 3 ? (
+                      <Link 
+                        to="/multiplayer"
+                        className="btn btn-success btn-lg gap-2"
+                      >
+                        <Users className="w-5 h-5" />
+                        Battle Players
+                      </Link>
+                    ) : (
+                      <button 
+                        className="btn btn-success btn-lg gap-2"
+                        disabled
+                      >
+                        <Users className="w-5 h-5" />
+                        Battle Players
+                      </button>
+                    )}
+                    {userCollection.length < 3 && (
+                      <div className="text-xs opacity-70 mt-2">
+                        Need at least 3 Pokemon
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
