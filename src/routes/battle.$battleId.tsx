@@ -492,7 +492,7 @@ function PokemonDisplay({
         <div className="text-xs opacity-70 mb-1">{label}</div>
         
         {/* Header: Name, Level, Types */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-1">
           <div>
             <h3 className="text-sm font-bold">{pokemon.name}</h3>
             <div className="flex gap-1 mt-1">
