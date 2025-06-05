@@ -57,6 +57,11 @@ export default defineSchema({
   }),
 
   battles: defineTable({
+    // Player information
+    player1Id: v.optional(v.id("users")), // null for AI battles
+    player2Id: v.optional(v.id("users")), // null for AI battles
+    battleType: v.union(v.literal("ai"), v.literal("multiplayer")),
+    
     player1Team: v.array(v.id("pokemon")),
     player2Team: v.array(v.id("pokemon")),
     player1ActivePokemon: v.id("pokemon"),
@@ -102,5 +107,25 @@ export default defineSchema({
       v.literal("player2_wins")
     ),
     battleLog: v.array(v.string()),
+    // Multiplayer-specific fields
+    lastActivity: v.optional(v.number()), // Timestamp for handling timeouts
   }),
+
+  // Battle matchmaking queue
+  battleQueue: defineTable({
+    userId: v.id("users"),
+    team: v.array(v.id("pokemon")), // Player's selected team
+    status: v.union(
+      v.literal("waiting"), 
+      v.literal("matched"), 
+      v.literal("cancelled")
+    ),
+    queuedAt: v.number(), // Timestamp when queued
+    preferences: v.optional(v.object({
+      levelRange: v.optional(v.object({
+        min: v.number(),
+        max: v.number(),
+      })),
+    })),
+  }).index("by_user", ["userId"]),
 });

@@ -38,6 +38,14 @@ function BattlePage() {
   const performMove = useMutation(api.battles.performMove);
   const performAIMove = useMutation(api.battles.performAIMove);
   const switchPokemon = useMutation(api.battles.switchPokemon);
+  
+  // For multiplayer battles, get player names
+  const player1 = battle?.battleType === "multiplayer" && battle?.player1Id 
+    ? useQuery(api.users.getUser, { userId: battle.player1Id })
+    : null;
+  const player2 = battle?.battleType === "multiplayer" && battle?.player2Id 
+    ? useQuery(api.users.getUser, { userId: battle.player2Id })
+    : null;
   const [showSwitchOptions, setShowSwitchOptions] = useState(false);
   const [levelUpNotifications, setLevelUpNotifications] = useState<Array<{
     pokemonName: string;
@@ -67,9 +75,9 @@ function BattlePage() {
   const isOpponentSelecting = battle?.status === "player2_selecting";
   const isActive = battle?.status === "active";
 
-  // Auto-trigger AI move when it's opponent's turn or AI needs to select Pokemon
+  // Auto-trigger AI move when it's opponent's turn or AI needs to select Pokemon (AI battles only)
   useEffect(() => {
-    if ((!isPlayerTurn && isActive) || isOpponentSelecting) {
+    if (battle?.battleType === "ai" && ((!isPlayerTurn && isActive) || isOpponentSelecting)) {
       // Add a small delay to make the AI move feel more natural
       const timer = setTimeout(() => {
         if (isOpponentSelecting) {
@@ -125,14 +133,18 @@ function BattlePage() {
               pokemon={battle.pokemon1}
               currentHp={battle.player1ActiveHp}
               isActive={isPlayerTurn}
-              label="Your Pokemon"
+              label={battle.battleType === "multiplayer" && player1 
+                ? `${player1.name || "Player 1"}` 
+                : "Your Pokemon"}
               statusEffect={battle.player1StatusEffect}
             />
             <PokemonDisplay
               pokemon={battle.pokemon2}
               currentHp={battle.player2ActiveHp}
               isActive={!isPlayerTurn}
-              label="Opponent"
+              label={battle.battleType === "multiplayer" && player2 
+                ? `${player2.name || "Player 2"}` 
+                : "Opponent"}
               statusEffect={battle.player2StatusEffect}
             />
           </div>

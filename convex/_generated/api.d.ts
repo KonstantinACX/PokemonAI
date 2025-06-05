@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as battles from "../battles.js";
 import type * as imageGeneration from "../imageGeneration.js";
+import type * as multiplayer from "../multiplayer.js";
 import type * as pokemon from "../pokemon.js";
 import type * as users from "../users.js";
 
@@ -29,6 +30,7 @@ import type * as users from "../users.js";
 declare const fullApi: ApiFromModules<{
   battles: typeof battles;
   imageGeneration: typeof imageGeneration;
+  multiplayer: typeof multiplayer;
   pokemon: typeof pokemon;
   users: typeof users;
 }>;

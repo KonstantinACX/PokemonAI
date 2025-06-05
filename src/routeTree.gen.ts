@@ -11,11 +11,18 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as MultiplayerImport } from './routes/multiplayer'
 import { Route as CatchImport } from './routes/catch'
 import { Route as IndexImport } from './routes/index'
 import { Route as BattleBattleIdImport } from './routes/battle.$battleId'
 
 // Create/Update Routes
+
+const MultiplayerRoute = MultiplayerImport.update({
+  id: '/multiplayer',
+  path: '/multiplayer',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const CatchRoute = CatchImport.update({
   id: '/catch',
@@ -53,6 +60,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatchImport
       parentRoute: typeof rootRoute
     }
+    '/multiplayer': {
+      id: '/multiplayer'
+      path: '/multiplayer'
+      fullPath: '/multiplayer'
+      preLoaderRoute: typeof MultiplayerImport
+      parentRoute: typeof rootRoute
+    }
     '/battle/$battleId': {
       id: '/battle/$battleId'
       path: '/battle/$battleId'
@@ -68,12 +82,14 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/catch': typeof CatchRoute
+  '/multiplayer': typeof MultiplayerRoute
   '/battle/$battleId': typeof BattleBattleIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/catch': typeof CatchRoute
+  '/multiplayer': typeof MultiplayerRoute
   '/battle/$battleId': typeof BattleBattleIdRoute
 }
 
@@ -81,27 +97,30 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/catch': typeof CatchRoute
+  '/multiplayer': typeof MultiplayerRoute
   '/battle/$battleId': typeof BattleBattleIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/catch' | '/battle/$battleId'
+  fullPaths: '/' | '/catch' | '/multiplayer' | '/battle/$battleId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/catch' | '/battle/$battleId'
-  id: '__root__' | '/' | '/catch' | '/battle/$battleId'
+  to: '/' | '/catch' | '/multiplayer' | '/battle/$battleId'
+  id: '__root__' | '/' | '/catch' | '/multiplayer' | '/battle/$battleId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CatchRoute: typeof CatchRoute
+  MultiplayerRoute: typeof MultiplayerRoute
   BattleBattleIdRoute: typeof BattleBattleIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CatchRoute: CatchRoute,
+  MultiplayerRoute: MultiplayerRoute,
   BattleBattleIdRoute: BattleBattleIdRoute,
 }
 
@@ -117,6 +136,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/catch",
+        "/multiplayer",
         "/battle/$battleId"
       ]
     },
@@ -125,6 +145,9 @@ export const routeTree = rootRoute
     },
     "/catch": {
       "filePath": "catch.tsx"
+    },
+    "/multiplayer": {
+      "filePath": "multiplayer.tsx"
     },
     "/battle/$battleId": {
       "filePath": "battle.$battleId.tsx"

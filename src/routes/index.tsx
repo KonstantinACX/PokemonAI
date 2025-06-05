@@ -191,6 +191,25 @@ function HomePage() {
               </div>
             </Authenticated>
 
+            {/* Multiplayer Battle Mode */}
+            <Authenticated>
+              <div className="card bg-base-200">
+                <div className="card-body">
+                  <h2 className="card-title">Multiplayer Battle</h2>
+                  <p>Battle against other players online in real-time!</p>
+                  <div className="card-actions justify-center">
+                    <Link 
+                      to="/multiplayer"
+                      className="btn btn-success btn-lg gap-2"
+                    >
+                      <Users className="w-5 h-5" />
+                      Battle Players
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </Authenticated>
+
             {/* Catch Mode */}
             <div className="card bg-base-200">
               <div className="card-body">

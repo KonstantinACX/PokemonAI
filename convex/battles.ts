@@ -88,6 +88,7 @@ export const createBattle = mutation({
     const firstTurn = pokemon1.speed >= pokemon2.speed ? "player1" : "player2";
 
     return await ctx.db.insert("battles", {
+      battleType: "ai", // Mark as AI battle
       player1Team: args.player1Team,
       player2Team: args.player2Team,
       player1ActivePokemon: args.player1Pokemon,
@@ -101,6 +102,49 @@ export const createBattle = mutation({
       player2StatMods: { attack: 0, defense: 0, speed: 0 },
       status: "active",
       battleLog: [`Battle begins! ${pokemon1.name} vs ${pokemon2.name}`],
+      lastActivity: Date.now(),
+    });
+  },
+});
+
+export const createMultiplayerBattle = mutation({
+  args: {
+    player1Id: v.id("users"),
+    player2Id: v.id("users"),
+    player1Team: v.array(v.id("pokemon")),
+    player2Team: v.array(v.id("pokemon")),
+    player1ActivePokemon: v.id("pokemon"),
+    player2ActivePokemon: v.id("pokemon"),
+  },
+  handler: async (ctx, args) => {
+    const pokemon1 = await ctx.db.get(args.player1ActivePokemon);
+    const pokemon2 = await ctx.db.get(args.player2ActivePokemon);
+    
+    if (!pokemon1 || !pokemon2) {
+      throw new Error("Pokemon not found");
+    }
+
+    // Determine turn order by speed
+    const firstTurn = pokemon1.speed >= pokemon2.speed ? "player1" : "player2";
+
+    return await ctx.db.insert("battles", {
+      battleType: "multiplayer", // Mark as multiplayer battle
+      player1Id: args.player1Id,
+      player2Id: args.player2Id,
+      player1Team: args.player1Team,
+      player2Team: args.player2Team,
+      player1ActivePokemon: args.player1ActivePokemon,
+      player2ActivePokemon: args.player2ActivePokemon,
+      currentTurn: firstTurn,
+      player1ActiveHp: pokemon1.hp,
+      player2ActiveHp: pokemon2.hp,
+      player1FaintedPokemon: [],
+      player2FaintedPokemon: [],
+      player1StatMods: { attack: 0, defense: 0, speed: 0 },
+      player2StatMods: { attack: 0, defense: 0, speed: 0 },
+      status: "active",
+      battleLog: [`Multiplayer battle begins! ${pokemon1.name} vs ${pokemon2.name}`],
+      lastActivity: Date.now(),
     });
   },
 });
@@ -114,6 +158,40 @@ export const performMove = mutation({
     const battle = await ctx.db.get(args.battleId);
     if (!battle || battle.status !== "active") {
       throw new Error("Battle not found or not active");
+    }
+
+    // For multiplayer battles, verify the user can make this move
+    if (battle.battleType === "multiplayer") {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
+        throw new Error("Must be authenticated for multiplayer battles");
+      }
+
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_tokenIdentifier", (q) => 
+          q.eq("tokenIdentifier", identity.tokenIdentifier)
+        )
+        .unique();
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      // Check if it's this user's turn
+      const isPlayer1 = battle.player1Id === user._id;
+      const isPlayer2 = battle.player2Id === user._id;
+      
+      if (!isPlayer1 && !isPlayer2) {
+        throw new Error("User not part of this battle");
+      }
+
+      const isUserTurn = (isPlayer1 && battle.currentTurn === "player1") || 
+                        (isPlayer2 && battle.currentTurn === "player2");
+      
+      if (!isUserTurn) {
+        throw new Error("Not your turn");
+      }
     }
 
     const [pokemon1, pokemon2] = await Promise.all([
