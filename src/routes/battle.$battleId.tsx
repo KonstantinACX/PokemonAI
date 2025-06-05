@@ -213,8 +213,8 @@ function BattlePage() {
       </div>
 
       <div className="card bg-base-200">
-        <div className="card-body">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-3">
+        <div className="card-body py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-1">
             <PokemonDisplay
               pokemon={battle.pokemon1}
               currentHp={battle.player1ActiveHp}
@@ -242,7 +242,7 @@ function BattlePage() {
           </div>
 
           {!isGameOver && (
-            <div className="mb-3">
+            <div className="mb-1">
               {isPlayerSelecting && (
                 <div>
                   <h3 className="text-center mb-2 text-warning">
@@ -302,8 +302,8 @@ function BattlePage() {
               )}
               
               {isActive && (
-                <div className="-mt-2">
-                  <h3 className="text-center mb-2">
+                <div className="-mt-4">
+                  <h3 className="text-center mb-1">
                     {battle?.battleType === "multiplayer" 
                       ? isPlayerTurn 
                         ? "Your turn! Choose your action!" 
@@ -318,7 +318,7 @@ function BattlePage() {
                   </h3>
                   
                   {isPlayerTurn && currentPokemon && (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
                         {currentPokemon.moves.map((move, index) => (
                           <button
