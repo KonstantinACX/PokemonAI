@@ -40,12 +40,16 @@ function BattlePage() {
   const switchPokemon = useMutation(api.battles.switchPokemon);
   
   // For multiplayer battles, get player names
-  const player1 = battle?.battleType === "multiplayer" && battle?.player1Id 
-    ? useQuery(api.users.getUser, { userId: battle.player1Id })
-    : null;
-  const player2 = battle?.battleType === "multiplayer" && battle?.player2Id 
-    ? useQuery(api.users.getUser, { userId: battle.player2Id })
-    : null;
+  const player1 = useQuery(api.users.getUser, 
+    battle?.battleType === "multiplayer" && battle?.player1Id 
+      ? { userId: battle.player1Id }
+      : "skip"
+  );
+  const player2 = useQuery(api.users.getUser, 
+    battle?.battleType === "multiplayer" && battle?.player2Id 
+      ? { userId: battle.player2Id }
+      : "skip"
+  );
   const [showSwitchOptions, setShowSwitchOptions] = useState(false);
   const [levelUpNotifications, setLevelUpNotifications] = useState<Array<{
     pokemonName: string;

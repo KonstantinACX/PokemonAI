@@ -133,14 +133,14 @@ function MultiplayerPage() {
       {queueStatus ? (
         <QueueStatusCard
           queueStatus={queueStatus}
-          onLeaveQueue={handleLeaveQueue}
+          onLeaveQueue={() => void handleLeaveQueue()}
         />
       ) : (
         <TeamSelectionCard
           userCollection={userCollection}
           selectedTeam={selectedTeam}
           onPokemonToggle={handlePokemonToggle}
-          onJoinQueue={handleJoinQueue}
+          onJoinQueue={() => void handleJoinQueue()}
         />
       )}
     </div>
