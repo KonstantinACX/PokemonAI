@@ -31,7 +31,8 @@
 - **Level System**: Added levels and XP to all Pokemon (all start at level 5) with UI display
 
 ## Session Commits (Latest)
-- [current]: Reverted to eb7984f to restore simple notification system
+- [current]: feat: Replace notifications immediately instead of stacking them
+- Reverted to eb7984f to restore simple notification system
 - eb7984f: fix: Adjust spacing between Pokemon cards and move elements
 - 284825d: docs: Update battleType schema comment for clarity
 - 23cd77a: fix: Fix schema validation by making battleType optional

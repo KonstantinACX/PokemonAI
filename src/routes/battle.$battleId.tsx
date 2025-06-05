@@ -167,11 +167,14 @@ function BattlePage() {
         // New messages have been added
         const newMessages = battle.battleLog.slice(lastBattleLogLength);
         
-        // Clear any existing notifications and show only the latest message
-        const latestMessage = newMessages[newMessages.length - 1];
+        // Combine multiple messages into one notification
+        const combinedMessage = newMessages.length > 1 
+          ? newMessages.join(' • ')  // Use bullet separator for multiple messages
+          : newMessages[0];
+        
         const notification = {
           id: `${Date.now()}`,
-          message: latestMessage,
+          message: combinedMessage,
           timestamp: Date.now(),
         };
         
