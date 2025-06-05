@@ -114,7 +114,7 @@ function BattlePage() {
                   <h3 className="text-center mb-4 text-warning">
                     Choose your next Pokemon!
                   </h3>
-                  <div className="grid grid-cols-3 gap-3 max-w-md mx-auto">
+                  <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto">
                     {battle.player1Team
                       .filter((pokemon): pokemon is NonNullable<typeof pokemon> => 
                         pokemon !== null && 
@@ -124,15 +124,15 @@ function BattlePage() {
                       .map((pokemon) => (
                         <button
                           key={pokemon._id}
-                          className="btn btn-outline min-w-0"
+                          className="btn btn-outline min-w-0 h-auto py-3 px-2"
                           onClick={() => void handleSwitchPokemon(pokemon._id)}
                         >
                           <div className="text-center w-full">
-                            <div className="font-bold text-sm truncate mb-1">
-                              <span className="block truncate">{pokemon.name}</span>
-                              <span className="font-normal opacity-70 text-xs">Lv.{pokemon.level || 5}</span>
+                            <div className="font-bold text-xs mb-1">
+                              <div className="truncate">{pokemon.name}</div>
+                              <div className="font-normal opacity-70">Lv.{pokemon.level || 5}</div>
                             </div>
-                            <div className="flex gap-1 justify-center mb-1">
+                            <div className="flex gap-1 justify-center mb-1 flex-wrap">
                               {pokemon.types.map((type: string) => (
                                 <span key={type} className="badge badge-primary badge-xs">
                                   {type}
@@ -197,7 +197,7 @@ function BattlePage() {
                           {showSwitchOptions && (
                             <div className="mt-3 p-3 bg-base-200 rounded-lg">
                               <div className="text-sm mb-2 opacity-70">Choose Pokemon to switch to:</div>
-                              <div className="grid grid-cols-2 gap-2">
+                              <div className="grid grid-cols-2 gap-3">
                                 {battle.player1Team
                                   .filter((pokemon): pokemon is NonNullable<typeof pokemon> => 
                                     pokemon !== null && 
@@ -207,18 +207,18 @@ function BattlePage() {
                                   .map((pokemon) => (
                                     <button
                                       key={pokemon._id}
-                                      className="btn btn-outline btn-sm min-w-0"
+                                      className="btn btn-outline btn-sm min-w-0 h-auto py-2 px-2"
                                       onClick={() => {
                                         void handleSwitchPokemon(pokemon._id);
                                         setShowSwitchOptions(false);
                                       }}
                                     >
                                       <div className="text-center w-full">
-                                        <div className="font-bold text-xs truncate mb-1">
-                                          <span className="block truncate">{pokemon.name}</span>
-                                          <span className="font-normal opacity-70">Lv.{pokemon.level || 5}</span>
+                                        <div className="font-bold text-xs mb-1">
+                                          <div className="truncate">{pokemon.name}</div>
+                                          <div className="font-normal opacity-70">Lv.{pokemon.level || 5}</div>
                                         </div>
-                                        <div className="flex gap-1 justify-center mb-1">
+                                        <div className="flex gap-1 justify-center mb-1 flex-wrap">
                                           {pokemon.types.map((type: string) => (
                                             <span key={type} className="badge badge-primary badge-xs">
                                               {type}
