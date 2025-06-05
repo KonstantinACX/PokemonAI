@@ -322,7 +322,7 @@ function BattlePage() {
                   </h3>
                   
                   {isPlayerTurn && currentPokemon && (
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
                         {currentPokemon.moves.map((move, index) => (
                           <button
