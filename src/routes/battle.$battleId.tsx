@@ -549,30 +549,30 @@ function PokemonDisplay({
           />
         </div>
 
-        {/* Stats - More Compact */}
-        <div className="grid grid-cols-4 gap-1 text-xs mb-2">
-          <div className="text-center">
-            <Sword className="w-3 h-3 mx-auto" />
+        {/* Stats - Compact with Full Names */}
+        <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+          <div className="flex items-center gap-1">
+            <Sword className="w-3 h-3" />
             <div className={`text-xs ${getStatColor(pokemon.attack, 'attack')}`}>
-              {getStatAdjective(pokemon.attack, 'attack').substring(0,3)}
+              {getStatAdjective(pokemon.attack, 'attack')}
             </div>
           </div>
-          <div className="text-center">
-            <Shield className="w-3 h-3 mx-auto" />
+          <div className="flex items-center gap-1">
+            <Shield className="w-3 h-3" />
             <div className={`text-xs ${getStatColor(pokemon.defense, 'defense')}`}>
-              {getStatAdjective(pokemon.defense, 'defense').substring(0,3)}
+              {getStatAdjective(pokemon.defense, 'defense')}
             </div>
           </div>
-          <div className="text-center">
-            <Zap className="w-3 h-3 mx-auto" />
+          <div className="flex items-center gap-1">
+            <Zap className="w-3 h-3" />
             <div className={`text-xs ${getStatColor(pokemon.speed, 'speed')}`}>
-              {getStatAdjective(pokemon.speed, 'speed').substring(0,3)}
+              {getStatAdjective(pokemon.speed, 'speed')}
             </div>
           </div>
-          <div className="text-center">
-            <Heart className="w-3 h-3 mx-auto" />
+          <div className="flex items-center gap-1">
+            <Heart className="w-3 h-3" />
             <div className={`text-xs ${getStatColor(pokemon.hp, 'hp')}`}>
-              {getStatAdjective(pokemon.hp, 'hp').substring(0,3)}
+              {getStatAdjective(pokemon.hp, 'hp')}
             </div>
           </div>
         </div>
