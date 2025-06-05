@@ -367,15 +367,16 @@ function BattlePage() {
                     if (battle?.battleType === "ai") {
                       return battle.status === "player1_wins" ? "You Win!" : "You Lose!";
                     } else {
-                      // Multiplayer battle
-                      const userWon = (isCurrentUserPlayer1 && battle.status === "player1_wins") ||
-                                      (isCurrentUserPlayer2 && battle.status === "player2_wins");
+                      // Multiplayer battle - get result from battle log
+                      const winMessage = battle.battleLog
+                        .slice()
+                        .reverse()
+                        .find(log => log.includes("wins the battle!") || log.includes("forfeited"));
                       
-                      if (userWon) {
-                        return "You Win!";
+                      if (winMessage) {
+                        return winMessage;
                       } else {
-                        const opponentName = isCurrentUserPlayer1 ? player2?.name : player1?.name;
-                        return `${opponentName || "Opponent"} Wins!`;
+                        return "Battle Ended";
                       }
                     }
                   })()}
