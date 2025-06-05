@@ -218,7 +218,7 @@ function BattlePage() {
             {battle.pokemon1?.name} vs {battle.pokemon2?.name}
           </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-3">
             <PokemonDisplay
               pokemon={battle.pokemon1}
               currentHp={battle.player1ActiveHp}
@@ -246,10 +246,10 @@ function BattlePage() {
           </div>
 
           {!isGameOver && (
-            <div className="mb-6">
+            <div className="mb-3">
               {isPlayerSelecting && (
                 <div>
-                  <h3 className="text-center mb-4 text-warning">
+                  <h3 className="text-center mb-2 text-warning">
                     Choose your next Pokemon!
                   </h3>
                   <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto">
@@ -294,7 +294,7 @@ function BattlePage() {
               )}
               
               {isOpponentSelecting && (
-                <h3 className="text-center mb-4">
+                <h3 className="text-center mb-2">
                   {battle?.battleType === "multiplayer" 
                     ? (() => {
                         const opponentName = isCurrentUserPlayer1 ? (player2?.displayName || player2?.name) : (player1?.displayName || player1?.name);
@@ -307,7 +307,7 @@ function BattlePage() {
               
               {isActive && (
                 <div>
-                  <h3 className="text-center mb-4">
+                  <h3 className="text-center mb-2">
                     {battle?.battleType === "multiplayer" 
                       ? isPlayerTurn 
                         ? "Your turn! Choose your action!" 
