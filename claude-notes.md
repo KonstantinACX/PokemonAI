@@ -31,7 +31,7 @@
 - **Level System**: Added levels and XP to all Pokemon (all start at level 5) with UI display
 
 ## Session Commits (Latest)
-- [current]: fix: Fix multiplayer turn tracking and player identification
+- [current]: feat: Add forfeit option for multiplayer battles
 - 284825d: docs: Update battleType schema comment for clarity
 - 23cd77a: fix: Fix schema validation by making battleType optional
 - e612fa9: fix: Fix build errors and Clerk auth integration

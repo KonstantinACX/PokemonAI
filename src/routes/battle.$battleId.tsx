@@ -38,6 +38,7 @@ function BattlePage() {
   const performMove = useMutation(api.battles.performMove);
   const performAIMove = useMutation(api.battles.performAIMove);
   const switchPokemon = useMutation(api.battles.switchPokemon);
+  const endMultiplayerBattle = useMutation(api.battles.endMultiplayerBattle);
   
   // Get current user for multiplayer turn determination
   const currentUser = useQuery(api.users.getCurrentUser);
@@ -74,6 +75,14 @@ function BattlePage() {
       pokemonId,
     });
   }, [switchPokemon, battleId]);
+
+  const handleEndBattle = useCallback(async () => {
+    if (battle?.battleType === "multiplayer" && window.confirm("Are you sure you want to forfeit this battle?")) {
+      await endMultiplayerBattle({
+        battleId: battleId as Id<"battles">,
+      });
+    }
+  }, [endMultiplayerBattle, battleId, battle?.battleType]);
 
   // Determine which player the current user is in multiplayer battles
   const isCurrentUserPlayer1 = battle?.battleType === "multiplayer" && currentUser && battle?.player1Id === currentUser._id;
@@ -137,11 +146,21 @@ function BattlePage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="not-prose mb-4">
+      <div className="not-prose mb-4 flex justify-between items-center">
         <Link to="/" className="btn btn-ghost btn-sm gap-2">
           <ArrowLeft className="w-4 h-4" />
           Back to Home
         </Link>
+        
+        {battle?.battleType === "multiplayer" && !isGameOver && (
+          <button 
+            onClick={() => void handleEndBattle()}
+            className="btn btn-ghost btn-xs text-error hover:bg-error hover:text-error-content opacity-60 hover:opacity-100"
+            title="Forfeit battle"
+          >
+            End Battle
+          </button>
+        )}
       </div>
 
       <div className="card bg-base-200">

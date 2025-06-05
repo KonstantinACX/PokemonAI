@@ -679,3 +679,61 @@ async function awardBattleXp(ctx: any, battle: any, player1Won: boolean) {
     });
   }
 }
+
+export const endMultiplayerBattle = mutation({
+  args: {
+    battleId: v.id("battles"),
+  },
+  handler: async (ctx, args) => {
+    const battle = await ctx.db.get(args.battleId);
+    if (!battle) {
+      throw new Error("Battle not found");
+    }
+
+    // Verify this is a multiplayer battle
+    if (battle.battleType !== "multiplayer") {
+      throw new Error("Can only end multiplayer battles");
+    }
+
+    // Verify the user is part of this battle
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Must be authenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => 
+        q.eq("clerkId", identity.subject)
+      )
+      .unique();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const isPlayer1 = battle.player1Id === user._id;
+    const isPlayer2 = battle.player2Id === user._id;
+    
+    if (!isPlayer1 && !isPlayer2) {
+      throw new Error("User not part of this battle");
+    }
+
+    // Only allow ending if battle is active or in selection state
+    if (!["active", "player1_selecting", "player2_selecting"].includes(battle.status)) {
+      throw new Error("Battle cannot be ended in current state");
+    }
+
+    // End the battle - mark as forfeit by the user who requested it
+    const newStatus = isPlayer1 ? "player2_wins" : "player1_wins";
+    const playerName = isPlayer1 ? "Player 1" : "Player 2";
+    const newLog = [...battle.battleLog, `${playerName} forfeited the battle!`];
+
+    await ctx.db.patch(args.battleId, {
+      status: newStatus,
+      battleLog: newLog,
+    });
+
+    return { success: true };
+  },
+});
