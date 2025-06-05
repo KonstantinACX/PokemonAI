@@ -183,7 +183,7 @@ function BattlePage() {
                 : battle?.currentTurn === "player1"  // Multiplayer: highlight when it's player1's turn
               }
               label={battle.battleType === "multiplayer" && player1 
-                ? `${player1.name || "Player 1"}${isCurrentUserPlayer1 ? " (You)" : ""}` 
+                ? `${player1.displayName || player1.name || "Player 1"}${isCurrentUserPlayer1 ? " (You)" : ""}` 
                 : "Your Pokemon"}
               statusEffect={battle.player1StatusEffect}
             />
@@ -195,7 +195,7 @@ function BattlePage() {
                 : battle?.currentTurn === "player2"  // Multiplayer: highlight when it's player2's turn
               }
               label={battle.battleType === "multiplayer" && player2 
-                ? `${player2.name || "Player 2"}${isCurrentUserPlayer2 ? " (You)" : ""}` 
+                ? `${player2.displayName || player2.name || "Player 2"}${isCurrentUserPlayer2 ? " (You)" : ""}` 
                 : "Opponent"}
               statusEffect={battle.player2StatusEffect}
             />
@@ -253,7 +253,7 @@ function BattlePage() {
                 <h3 className="text-center mb-4">
                   {battle?.battleType === "multiplayer" 
                     ? (() => {
-                        const opponentName = isCurrentUserPlayer1 ? player2?.name : player1?.name;
+                        const opponentName = isCurrentUserPlayer1 ? (player2?.displayName || player2?.name) : (player1?.displayName || player1?.name);
                         return `${opponentName || "Opponent"} is choosing their next Pokemon...`;
                       })()
                     : "Opponent is choosing their next Pokemon..."
@@ -268,7 +268,7 @@ function BattlePage() {
                       ? isPlayerTurn 
                         ? "Your turn! Choose your action!" 
                         : (() => {
-                            const opponentName = isCurrentUserPlayer1 ? player2?.name : player1?.name;
+                            const opponentName = isCurrentUserPlayer1 ? (player2?.displayName || player2?.name) : (player1?.displayName || player1?.name);
                             return `${opponentName || "Opponent"} is choosing...`;
                           })()
                       : isPlayerTurn 

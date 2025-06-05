@@ -5,6 +5,7 @@ export default defineSchema({
   users: defineTable({
     clerkId: v.string(),
     name: v.string(),
+    displayName: v.optional(v.string()), // Custom display name for multiplayer battles
   }).index("by_clerkId", ["clerkId"]),
 
   collections: defineTable({

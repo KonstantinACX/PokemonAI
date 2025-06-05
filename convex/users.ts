@@ -161,3 +161,31 @@ export const removeFromCollection = mutation({
     return args.pokemonId;
   },
 });
+
+export const updateDisplayName = mutation({
+  args: { displayName: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Validate display name
+    const trimmedName = args.displayName.trim();
+    if (trimmedName.length < 1 || trimmedName.length > 20) {
+      throw new Error("Display name must be between 1 and 20 characters");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await ctx.db.patch(user._id, { displayName: trimmedName });
+    return await ctx.db.get(user._id);
+  },
+});

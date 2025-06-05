@@ -1,7 +1,7 @@
 import { useAction, useMutation, useQuery, Authenticated } from "convex/react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Swords, Sparkles, ImageIcon, Search, Users } from "lucide-react";
+import { Swords, Sparkles, ImageIcon, Search, Users, Edit3 } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { getStatAdjective, getStatColor } from "../utils/pokemonStats";
@@ -21,11 +21,15 @@ function HomePage() {
   const [showPokemonSelection, setShowPokemonSelection] = useState(false);
   const [selectedCollectionPokemon, setSelectedCollectionPokemon] = useState<Id<"pokemon">[]>([]);
   const [isGeneratingTeams, setIsGeneratingTeams] = useState(false);
+  const [isEditingDisplayName, setIsEditingDisplayName] = useState(false);
+  const [displayNameInput, setDisplayNameInput] = useState("");
 
   const navigate = useNavigate();
   const generateTeam = useAction(api.pokemon.generateTeam);
   const createBattle = useMutation(api.battles.createBattle);
   const userCollection = useQuery(api.users.getUserCollection) || [];
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const updateDisplayName = useMutation(api.users.updateDisplayName);
 
   const handleGenerateTeams = async () => {
     setIsGeneratingTeams(true);
@@ -100,6 +104,26 @@ function HomePage() {
     setSelectedCollectionPokemon([]);
   };
 
+  const handleDisplayNameEdit = () => {
+    setDisplayNameInput(currentUser?.displayName || currentUser?.name || "");
+    setIsEditingDisplayName(true);
+  };
+
+  const handleDisplayNameSave = async () => {
+    try {
+      await updateDisplayName({ displayName: displayNameInput });
+      setIsEditingDisplayName(false);
+    } catch (error) {
+      console.error("Error updating display name:", error);
+      alert("Failed to update display name. Please try again.");
+    }
+  };
+
+  const handleDisplayNameCancel = () => {
+    setIsEditingDisplayName(false);
+    setDisplayNameInput("");
+  };
+
   const handleStartBattle = async () => {
     if (!selectedPokemon.player || !selectedPokemon.opponent) return;
     
@@ -121,6 +145,45 @@ function HomePage() {
       </div>
       <h1 className="mt-0">PokemonAI Battle Simulator</h1>
       <p>AI-generated Pokemon battles with custom creatures!</p>
+      
+      {/* Display Name Editor */}
+      <Authenticated>
+        <div className="max-w-sm mx-auto mb-6">
+          {isEditingDisplayName ? (
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={displayNameInput}
+                onChange={(e) => setDisplayNameInput(e.target.value)}
+                placeholder="Enter display name"
+                className="input input-sm input-bordered flex-1"
+                maxLength={20}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void handleDisplayNameSave();
+                  if (e.key === "Escape") handleDisplayNameCancel();
+                }}
+              />
+              <button onClick={() => void handleDisplayNameSave()} className="btn btn-sm btn-primary">
+                Save
+              </button>
+              <button onClick={handleDisplayNameCancel} className="btn btn-sm btn-ghost">
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <span>Battle Name: <strong>{currentUser?.displayName || currentUser?.name || "Loading..."}</strong></span>
+              <button 
+                onClick={handleDisplayNameEdit} 
+                className="btn btn-ghost btn-xs"
+                title="Change display name"
+              >
+                <Edit3 className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+        </div>
+      </Authenticated>
 
       <div className="not-prose mt-8">
         {showPokemonSelection ? (
