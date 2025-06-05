@@ -1,7 +1,7 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { ArrowLeft, Heart, Shield, Sword, Zap, ImageIcon } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "../../convex/_generated/api";
