@@ -410,8 +410,24 @@ export const performMove = mutation({
       if (remainingPokemon.length === 0) {
         // All Pokemon fainted - battle ends
         const newStatus = isPlayer1Turn ? "player1_wins" : "player2_wins";
-        const winner = isPlayer1Turn ? pokemon1.name : pokemon2.name;
-        newLog.push(`All ${defendingPlayer === "player1" ? "Player 1's" : "Player 2's"} Pokemon have fainted! ${winner} wins the battle!`);
+        
+        // For multiplayer battles, get actual player names
+        if (battle.battleType === "multiplayer") {
+          const player1User = await ctx.db.get(battle.player1Id!);
+          const player2User = await ctx.db.get(battle.player2Id!);
+          const winnerName = isPlayer1Turn 
+            ? (player1User?.displayName || player1User?.name || "Player 1")
+            : (player2User?.displayName || player2User?.name || "Player 2");
+          const loserName = isPlayer1Turn 
+            ? (player2User?.displayName || player2User?.name || "Player 2")
+            : (player1User?.displayName || player1User?.name || "Player 1");
+          
+          newLog.push(`All ${loserName}'s Pokemon have fainted! ${winnerName} wins the battle!`);
+        } else {
+          // AI battle - use original logic
+          const winner = isPlayer1Turn ? pokemon1.name : pokemon2.name;
+          newLog.push(`All ${defendingPlayer === "player1" ? "Player 1's" : "Player 2's"} Pokemon have fainted! ${winner} wins the battle!`);
+        }
         
         await ctx.db.patch(args.battleId, {
           ...(isPlayer1Turn 
@@ -727,7 +743,10 @@ export const endMultiplayerBattle = mutation({
 
     // End the battle - mark as forfeit by the user who requested it
     const newStatus = isPlayer1 ? "player2_wins" : "player1_wins";
-    const playerName = isPlayer1 ? "Player 1" : "Player 2";
+    
+    // Get the actual player name who forfeited
+    const forfeitingPlayer = await ctx.db.get(user._id);
+    const playerName = forfeitingPlayer?.displayName || forfeitingPlayer?.name || (isPlayer1 ? "Player 1" : "Player 2");
     const newLog = [...battle.battleLog, `${playerName} forfeited the battle!`];
 
     await ctx.db.patch(args.battleId, {
