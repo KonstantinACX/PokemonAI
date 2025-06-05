@@ -306,7 +306,7 @@ function BattlePage() {
               )}
               
               {isActive && (
-                <div>
+                <div className="-mt-2">
                   <h3 className="text-center mb-2">
                     {battle?.battleType === "multiplayer" 
                       ? isPlayerTurn 
