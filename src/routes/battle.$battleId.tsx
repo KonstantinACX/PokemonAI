@@ -485,7 +485,7 @@ function PokemonDisplay({
   return (
     <div className={`card bg-base-100 ${isActive ? "ring-2 ring-primary" : ""} transform scale-90 origin-top`}>
       <div className="card-body p-3">
-        <div className="text-xs opacity-70 mb-1">{label}</div>
+        <div className="text-xs opacity-70 mb-0.5">{label}</div>
         
         {/* Header: Name, Level, Types */}
         <div className="flex items-center justify-between mb-1">
