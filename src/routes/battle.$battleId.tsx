@@ -167,22 +167,22 @@ function BattlePage() {
         // New messages have been added
         const newMessages = battle.battleLog.slice(lastBattleLogLength);
         
-        newMessages.forEach((message, index) => {
-          const notification = {
-            id: `${Date.now()}-${index}`,
-            message,
-            timestamp: Date.now(),
-          };
-          
-          setBattleLogNotifications(prev => [...prev, notification]);
-          
-          // Remove notification after 2.5 seconds
-          setTimeout(() => {
-            setBattleLogNotifications(prev => 
-              prev.filter(n => n.id !== notification.id)
-            );
-          }, 2500);
-        });
+        // Clear any existing notifications and show only the latest message
+        const latestMessage = newMessages[newMessages.length - 1];
+        const notification = {
+          id: `${Date.now()}`,
+          message: latestMessage,
+          timestamp: Date.now(),
+        };
+        
+        setBattleLogNotifications([notification]);
+        
+        // Remove notification after 2.5 seconds
+        setTimeout(() => {
+          setBattleLogNotifications(prev => 
+            prev.filter(n => n.id !== notification.id)
+          );
+        }, 2500);
         
         setLastBattleLogLength(currentLogLength);
       }
