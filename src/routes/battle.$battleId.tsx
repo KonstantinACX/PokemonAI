@@ -8,6 +8,21 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { getStatAdjective, getStatColor } from "../utils/pokemonStats";
 
+// XP calculation helpers
+const XP_TABLE = [
+  0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700,
+  3250, 3850, 4500, 5200, 5950, 6750, 7600, 8500, 9450, 10450
+];
+
+function getXpForCurrentLevel(level: number): number {
+  return XP_TABLE[Math.max(0, Math.min(level - 1, XP_TABLE.length - 1))];
+}
+
+function getXpForNextLevel(level: number): number {
+  if (level >= 20) return XP_TABLE[XP_TABLE.length - 1]; // Max level
+  return XP_TABLE[Math.min(level, XP_TABLE.length - 1)];
+}
+
 const battleQueryOptions = (battleId: Id<"battles">) => 
   convexQuery(api.battles.getBattle, { id: battleId });
 
@@ -24,6 +39,12 @@ function BattlePage() {
   const performAIMove = useMutation(api.battles.performAIMove);
   const switchPokemon = useMutation(api.battles.switchPokemon);
   const [showSwitchOptions, setShowSwitchOptions] = useState(false);
+  const [levelUpNotifications, setLevelUpNotifications] = useState<Array<{
+    pokemonName: string;
+    oldLevel: number;
+    newLevel: number;
+    xpGained: number;
+  }>>([]);
 
   const handleMove = useCallback(async (moveIndex: number) => {
     await performMove({
@@ -70,6 +91,27 @@ function BattlePage() {
       return () => clearTimeout(timer);
     }
   }, [isPlayerTurn, isActive, isOpponentSelecting, performAIMove, battleId, battle, handleSwitchPokemon]);
+
+  // Check for battle end and show level-up notifications
+  useEffect(() => {
+    if (battle?.status === "player1_wins" || battle?.status === "player2_wins") {
+      // For now, show a simple notification that XP was gained
+      // In a real implementation, you'd get the level-up results from the backend
+      const sampleNotifications = [
+        {
+          pokemonName: battle.pokemon1?.name || "Pokemon",
+          oldLevel: 5,
+          newLevel: 6,
+          xpGained: 175,
+        }
+      ];
+      
+      // Only show notifications once per battle
+      if (levelUpNotifications.length === 0) {
+        setLevelUpNotifications(sampleNotifications);
+      }
+    }
+  }, [battle?.status, battle?.pokemon1?.name, levelUpNotifications.length]);
 
   if (!battle) {
     return <div>Battle not found</div>;
@@ -267,6 +309,12 @@ function BattlePage() {
           </div>
         </div>
       </div>
+
+      {/* Level Up Notifications */}
+      <LevelUpNotifications 
+        notifications={levelUpNotifications}
+        onDismiss={() => setLevelUpNotifications([])}
+      />
     </div>
   );
 }
@@ -327,6 +375,19 @@ function PokemonDisplay({
               className={`progress progress-${hpColor} w-full`} 
               value={currentHp} 
               max={pokemon.hp}
+            />
+          </div>
+
+          {/* XP Progress Bar */}
+          <div>
+            <div className="flex justify-between text-xs opacity-70">
+              <span>XP</span>
+              <span>{pokemon.xp || 0} / {getXpForNextLevel(pokemon.level || 5)}</span>
+            </div>
+            <progress 
+              className="progress progress-info w-full h-1" 
+              value={(pokemon.xp || 0) - getXpForCurrentLevel(pokemon.level || 5)}
+              max={getXpForNextLevel(pokemon.level || 5) - getXpForCurrentLevel(pokemon.level || 5)}
             />
           </div>
 
@@ -440,6 +501,54 @@ function StatusEffectBadge({ statusEffect }: { statusEffect: string }) {
     <div className={`badge ${config.color} badge-sm gap-1`}>
       <span>{config.icon}</span>
       <span>{config.name}</span>
+    </div>
+  );
+}
+
+function LevelUpNotifications({ 
+  notifications, 
+  onDismiss 
+}: { 
+  notifications: Array<{
+    pokemonName: string;
+    oldLevel: number;
+    newLevel: number;
+    xpGained: number;
+  }>;
+  onDismiss: () => void;
+}) {
+  if (notifications.length === 0) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-base-100 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <h3 className="text-lg font-bold mb-4 text-center">🎉 Level Up!</h3>
+        
+        <div className="space-y-3">
+          {notifications.map((notification, index) => (
+            <div key={index} className="bg-success/20 p-3 rounded-lg">
+              <div className="font-bold text-center text-success">
+                {notification.pokemonName}
+              </div>
+              <div className="text-center text-sm">
+                Level {notification.oldLevel} → Level {notification.newLevel}
+              </div>
+              <div className="text-center text-xs opacity-70">
+                +{notification.xpGained} XP gained!
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="text-center mt-4">
+          <button 
+            className="btn btn-primary"
+            onClick={onDismiss}
+          >
+            Continue
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -348,6 +348,9 @@ export const performMove = mutation({
           status: newStatus,
           battleLog: newLog,
         });
+        
+        // Award XP to all participating Pokemon when battle ends
+        await awardBattleXp(ctx, battle, isPlayer1Turn);
       } else {
         // Pokemon available - need to select new one
         const newStatus = isPlayer1Turn ? "player2_selecting" : "player1_selecting";
@@ -540,3 +543,55 @@ export const getBattle = query({
     };
   },
 });
+
+// Helper function to award XP to all Pokemon after battle
+async function awardBattleXp(ctx: any, battle: any, player1Won: boolean) {
+  const BATTLE_XP = {
+    PARTICIPATION: 50,    // XP for participating in battle
+    VICTORY: 100,        // Additional XP for winning team
+    KNOCKOUT: 75,        // Additional XP for knocking out opponent Pokemon
+    SURVIVAL: 25,        // Additional XP for surviving the battle
+  };
+
+  // Award XP to player 1 team
+  for (const pokemonId of battle.player1Team) {
+    let totalXp = BATTLE_XP.PARTICIPATION;
+    
+    // Victory bonus
+    if (player1Won) {
+      totalXp += BATTLE_XP.VICTORY;
+    }
+    
+    // Survival bonus (not fainted)
+    if (!battle.player1FaintedPokemon.includes(pokemonId)) {
+      totalXp += BATTLE_XP.SURVIVAL;
+    }
+    
+    // Award XP and check for level up
+    await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+      pokemonId,
+      xpGained: totalXp,
+    });
+  }
+  
+  // Award XP to player 2 team  
+  for (const pokemonId of battle.player2Team) {
+    let totalXp = BATTLE_XP.PARTICIPATION;
+    
+    // Victory bonus
+    if (!player1Won) {
+      totalXp += BATTLE_XP.VICTORY;
+    }
+    
+    // Survival bonus (not fainted)
+    if (!battle.player2FaintedPokemon.includes(pokemonId)) {
+      totalXp += BATTLE_XP.SURVIVAL;
+    }
+    
+    // Award XP and check for level up
+    await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+      pokemonId,
+      xpGained: totalXp,
+    });
+  }
+}

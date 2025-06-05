@@ -299,3 +299,67 @@ export const updatePokemonImage = mutation({
     await ctx.db.patch(args.pokemonId, { imageUrl: args.imageUrl });
   },
 });
+
+export const awardXpAndCheckLevelUp = mutation({
+  args: {
+    pokemonId: v.id("pokemon"),
+    xpGained: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const pokemon = await ctx.db.get(args.pokemonId);
+    if (!pokemon) return null;
+
+    const currentXp = (pokemon.xp || 0) + args.xpGained;
+    const currentLevel = pokemon.level || 5;
+    
+    // Calculate new level based on XP
+    const newLevel = calculateLevelFromXp(currentXp);
+    
+    let updates: any = { xp: currentXp };
+    
+    // If Pokemon leveled up, increase stats
+    if (newLevel > currentLevel) {
+      const statIncrease = calculateStatIncrease(pokemon.hp, currentLevel, newLevel);
+      updates = {
+        ...updates,
+        level: newLevel,
+        hp: pokemon.hp + statIncrease,
+        attack: pokemon.attack + Math.floor(statIncrease * 0.8),
+        defense: pokemon.defense + Math.floor(statIncrease * 0.8),
+        speed: pokemon.speed + Math.floor(statIncrease * 0.6),
+      };
+    }
+    
+    await ctx.db.patch(args.pokemonId, updates);
+    
+    return {
+      leveledUp: newLevel > currentLevel,
+      oldLevel: currentLevel,
+      newLevel: newLevel,
+      xpGained: args.xpGained,
+      newXp: currentXp,
+    };
+  },
+});
+
+// Helper functions for level calculations
+function calculateLevelFromXp(xp: number): number {
+  // XP thresholds for each level
+  const xpTable = [
+    0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700,
+    3250, 3850, 4500, 5200, 5950, 6750, 7600, 8500, 9450, 10450
+  ];
+  
+  for (let level = xpTable.length; level >= 1; level--) {
+    if (xp >= xpTable[level - 1]) {
+      return Math.min(level, 20); // Max level 20
+    }
+  }
+  return 1; // Minimum level
+}
+
+function calculateStatIncrease(baseStat: number, oldLevel: number, newLevel: number): number {
+  const levelsGained = newLevel - oldLevel;
+  const increasePerLevel = Math.max(1, Math.floor(baseStat * 0.07)); // 7% per level, minimum 1
+  return increasePerLevel * levelsGained;
+}
