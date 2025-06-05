@@ -214,10 +214,6 @@ function BattlePage() {
 
       <div className="card bg-base-200">
         <div className="card-body">
-          <h1 className="card-title text-center mb-6">
-            {battle.pokemon1?.name} vs {battle.pokemon2?.name}
-          </h1>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-3">
             <PokemonDisplay
               pokemon={battle.pokemon1}
