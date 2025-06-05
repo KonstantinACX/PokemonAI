@@ -94,7 +94,12 @@ function BattlePage() {
     : Boolean((isCurrentUserPlayer1 && battle?.currentTurn === "player1") || 
               (isCurrentUserPlayer2 && battle?.currentTurn === "player2"));
       
-  const currentPokemon = isPlayerTurn ? battle?.pokemon1 : battle?.pokemon2;
+  // Get the current user's Pokemon for move display
+  const currentPokemon = battle?.battleType === "ai" 
+    ? battle?.pokemon1  // AI battles: user is always player1
+    : isCurrentUserPlayer1 
+      ? battle?.pokemon1  // User is player1, show player1's Pokemon
+      : battle?.pokemon2; // User is player2, show player2's Pokemon
   const isGameOver = Boolean(battle?.status === "player1_wins" || battle?.status === "player2_wins");
   const isPlayerSelecting = battle?.battleType === "ai" 
     ? Boolean(battle?.status === "player1_selecting")
@@ -173,18 +178,24 @@ function BattlePage() {
             <PokemonDisplay
               pokemon={battle.pokemon1}
               currentHp={battle.player1ActiveHp}
-              isActive={isPlayerTurn}
+              isActive={battle?.battleType === "ai" 
+                ? isPlayerTurn  // AI: highlight when it's user's turn
+                : battle?.currentTurn === "player1"  // Multiplayer: highlight when it's player1's turn
+              }
               label={battle.battleType === "multiplayer" && player1 
-                ? `${player1.name || "Player 1"}` 
+                ? `${player1.name || "Player 1"}${isCurrentUserPlayer1 ? " (You)" : ""}` 
                 : "Your Pokemon"}
               statusEffect={battle.player1StatusEffect}
             />
             <PokemonDisplay
               pokemon={battle.pokemon2}
               currentHp={battle.player2ActiveHp}
-              isActive={!isPlayerTurn}
+              isActive={battle?.battleType === "ai" 
+                ? !isPlayerTurn  // AI: highlight when it's opponent's turn
+                : battle?.currentTurn === "player2"  // Multiplayer: highlight when it's player2's turn
+              }
               label={battle.battleType === "multiplayer" && player2 
-                ? `${player2.name || "Player 2"}` 
+                ? `${player2.name || "Player 2"}${isCurrentUserPlayer2 ? " (You)" : ""}` 
                 : "Opponent"}
               statusEffect={battle.player2StatusEffect}
             />
