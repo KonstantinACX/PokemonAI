@@ -176,12 +176,12 @@ function BattlePage() {
           
           setBattleLogNotifications(prev => [...prev, notification]);
           
-          // Remove notification after 1.5 seconds
+          // Remove notification after 2.5 seconds
           setTimeout(() => {
             setBattleLogNotifications(prev => 
               prev.filter(n => n.id !== notification.id)
             );
-          }, 1500);
+          }, 2500);
         });
         
         setLastBattleLogLength(currentLogLength);
