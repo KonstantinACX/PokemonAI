@@ -60,7 +60,7 @@ export default defineSchema({
     // Player information
     player1Id: v.optional(v.id("users")), // null for AI battles
     player2Id: v.optional(v.id("users")), // null for AI battles
-    battleType: v.optional(v.union(v.literal("ai"), v.literal("multiplayer"))), // Optional for backward compatibility
+    battleType: v.optional(v.union(v.literal("ai"), v.literal("multiplayer"))), // Optional for backward compatibility with existing battles
     
     player1Team: v.array(v.id("pokemon")),
     player2Team: v.array(v.id("pokemon")),
