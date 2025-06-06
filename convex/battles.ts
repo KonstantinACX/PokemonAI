@@ -308,7 +308,7 @@ export const performMove = mutation({
     if (move.effect && (move.effect.type === "stat_boost" || move.effect.type === "stat_reduction") && move.effect.stat && move.effect.stages !== undefined) {
       const targetIsPlayer1 = (move.effect.target === "self" && isPlayer1Turn) || (move.effect.target === "opponent" && !isPlayer1Turn);
       const currentStatMods = targetIsPlayer1 ? updatedPlayer1StatMods : updatedPlayer2StatMods;
-      const targetPokemon = targetIsPlayer1 ? attacker : defender;
+      const targetPokemon = targetIsPlayer1 ? pokemon1 : pokemon2;
       
       const statName = move.effect.stat;
       const stageChange = move.effect.stages;
@@ -346,7 +346,7 @@ export const performMove = mutation({
     
     if (move.effect && move.effect.type === "status_effect" && move.effect.statusEffect && move.effect.chance) {
       const targetIsPlayer1 = (move.effect.target === "self" && isPlayer1Turn) || (move.effect.target === "opponent" && !isPlayer1Turn);
-      const targetPokemon = targetIsPlayer1 ? attacker : defender;
+      const targetPokemon = targetIsPlayer1 ? pokemon1 : pokemon2;
       const currentStatusEffect = targetIsPlayer1 ? battle.player1StatusEffect : battle.player2StatusEffect;
       
       // Only inflict status if target doesn't already have one (no status stacking)
