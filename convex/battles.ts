@@ -512,6 +512,106 @@ export const performMove = mutation({
         }
       }
       
+      // Check if any Pokemon fainted due to status damage
+      if (finalPlayer1Hp <= 0) {
+        newLog.push(`${pokemon1.name} fainted!`);
+        
+        // Award XP for knockout to the opposing team
+        if (battle.battleType === "ai") {
+          // In AI battle, player gets XP for AI Pokemon fainting
+          await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+            pokemonId: battle.player1ActivePokemon,
+            xpGained: 75, // Knockout XP
+          });
+        } else if (battle.battleType === "multiplayer") {
+          // In multiplayer, award XP to the opposing player's active Pokemon
+          await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+            pokemonId: battle.player2ActivePokemon,
+            xpGained: 75, // Knockout XP
+          });
+        }
+        
+        // Check if player has any remaining Pokemon
+        const remainingPlayer1Pokemon = battle.player1Team.filter(id => id !== battle.player1ActivePokemon);
+        if (remainingPlayer1Pokemon.length === 0) {
+          // Player1 has no more Pokemon - Player2 wins
+          await awardBattleXp(ctx, battle, false);
+          await ctx.db.patch(args.battleId, {
+            status: "player2_wins",
+            battleLog: newLog,
+          });
+          return;
+        } else {
+          // Force player1 to switch Pokemon
+          await ctx.db.patch(args.battleId, {
+            status: "player1_must_switch",
+            player1ActiveHp: finalPlayer1Hp,
+            player2ActiveHp: finalPlayer2Hp,
+            battleLog: newLog,
+          });
+          return;
+        }
+      }
+      
+      if (finalPlayer2Hp <= 0) {
+        newLog.push(`${pokemon2.name} fainted!`);
+        
+        // Award XP for knockout to the opposing team
+        if (battle.battleType === "ai") {
+          // In AI battle, player gets XP for AI Pokemon fainting
+          await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+            pokemonId: battle.player1ActivePokemon,
+            xpGained: 75, // Knockout XP
+          });
+        } else if (battle.battleType === "multiplayer") {
+          // In multiplayer, award XP to the opposing player's active Pokemon
+          await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+            pokemonId: battle.player1ActivePokemon,
+            xpGained: 75, // Knockout XP
+          });
+        }
+        
+        // Check if player has any remaining Pokemon
+        const remainingPlayer2Pokemon = battle.player2Team.filter(id => id !== battle.player2ActivePokemon);
+        if (remainingPlayer2Pokemon.length === 0) {
+          // Player2 has no more Pokemon - Player1 wins
+          await awardBattleXp(ctx, battle, true);
+          await ctx.db.patch(args.battleId, {
+            status: "player1_wins",
+            battleLog: newLog,
+          });
+          return;
+        } else {
+          // Handle AI or multiplayer switching
+          if (battle.battleType === "ai") {
+            // AI automatically switches to next Pokemon
+            const nextPokemon = remainingPlayer2Pokemon[0];
+            const nextPokemonData = await ctx.db.get(nextPokemon);
+            if (nextPokemonData) {
+              newLog.push(`AI sends out ${nextPokemonData.name}!`);
+              await ctx.db.patch(args.battleId, {
+                player2ActivePokemon: nextPokemon,
+                player2ActiveHp: nextPokemonData.hp,
+                player1ActiveHp: finalPlayer1Hp,
+                player2ActiveHp: nextPokemonData.hp,
+                battleLog: newLog,
+                currentTurn: "player1",
+              });
+              return;
+            }
+          } else {
+            // Force player2 to switch Pokemon
+            await ctx.db.patch(args.battleId, {
+              status: "player2_must_switch",
+              player1ActiveHp: finalPlayer1Hp,
+              player2ActiveHp: finalPlayer2Hp,
+              battleLog: newLog,
+            });
+            return;
+          }
+        }
+      }
+      
       // Pokemon survives - continue battle
       await ctx.db.patch(args.battleId, {
         player1ActiveHp: finalPlayer1Hp,
