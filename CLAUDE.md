@@ -180,3 +180,4 @@
 - Import icons from `lucide-react`
 - When making identical changes to multiple occurrences, use Edit with `replace_all: true` instead of MultiEdit. Avoid MultiEdit whenever possible, it is unreliable.
 - Never leave floating promisses, use void when needed
+- Do not modify the authentication system unless explicity instructed to do so. Otherwise stop and ask permission.

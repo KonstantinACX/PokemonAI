@@ -78,6 +78,20 @@ export const createBattle = mutation({
     player2Pokemon: v.id("pokemon"),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
     const pokemon1 = await ctx.db.get(args.player1Pokemon);
     const pokemon2 = await ctx.db.get(args.player2Pokemon);
     
@@ -90,6 +104,7 @@ export const createBattle = mutation({
 
     return await ctx.db.insert("battles", {
       battleType: "ai", // Mark as AI battle
+      player1Id: user._id, // Set the authenticated user as player1
       player1Team: args.player1Team,
       player2Team: args.player2Team,
       player1ActivePokemon: args.player1Pokemon,
