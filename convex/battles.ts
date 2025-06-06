@@ -446,6 +446,9 @@ export const performMove = mutation({
         
         // Award XP to all participating Pokemon when battle ends
         await awardBattleXp(ctx, battle, isPlayer1Turn);
+        
+        // Record battle result for AI battles
+        await recordBattleResult(ctx, battle, isPlayer1Turn);
       } else {
         // Pokemon available - need to select new one
         const newStatus = isPlayer1Turn ? "player2_selecting" : "player1_selecting";
@@ -554,6 +557,7 @@ export const performMove = mutation({
         if (remainingPlayer1Pokemon.length === 0) {
           // Player1 has no more Pokemon - Player2 wins
           await awardBattleXp(ctx, battle, false);
+          await recordBattleResult(ctx, battle, false);
           await ctx.db.patch(args.battleId, {
             status: "player2_wins",
             battleLog: newLog,
@@ -611,6 +615,7 @@ export const performMove = mutation({
         if (remainingPlayer2Pokemon.length === 0) {
           // Player2 has no more Pokemon - Player1 wins
           await awardBattleXp(ctx, battle, true);
+          await recordBattleResult(ctx, battle, true);
           await ctx.db.patch(args.battleId, {
             status: "player1_wins",
             battleLog: newLog,
@@ -872,6 +877,63 @@ async function awardBattleXp(ctx: any, battle: any, player1Won: boolean) {
     });
   }
 }
+
+// Helper function to record battle results for AI battles
+async function recordBattleResult(ctx: any, battle: any, player1Won: boolean) {
+  // Only record AI battle results
+  if (battle.battleType === "ai" && battle.player1Id) {
+    await ctx.db.insert("battleRecords", {
+      userId: battle.player1Id,
+      battleType: "ai",
+      result: player1Won ? "win" : "loss",
+      battleId: battle._id,
+      completedAt: Date.now(),
+    });
+  }
+}
+
+export const getPlayerBattleRecord = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { records: [], stats: { wins: 0, losses: 0 } };
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) =>
+        q.eq("clerkId", identity.subject)
+      )
+      .unique();
+
+    if (!user) {
+      return { records: [], stats: { wins: 0, losses: 0 } };
+    }
+
+    // Get recent battle records (default last 5)
+    const limit = args.limit ?? 5;
+    const records = await ctx.db
+      .query("battleRecords")
+      .withIndex("by_user_and_date", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .take(limit);
+
+    // Calculate overall stats
+    const allRecords = await ctx.db
+      .query("battleRecords")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const wins = allRecords.filter(r => r.result === "win").length;
+    const losses = allRecords.filter(r => r.result === "loss").length;
+
+    return {
+      records,
+      stats: { wins, losses }
+    };
+  },
+});
 
 export const endMultiplayerBattle = mutation({
   args: {

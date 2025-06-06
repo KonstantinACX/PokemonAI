@@ -137,4 +137,15 @@ export default defineSchema({
       })),
     })),
   }).index("by_user", ["userId"]),
+
+  // Battle records for tracking player performance against AI
+  battleRecords: defineTable({
+    userId: v.id("users"),
+    battleType: v.literal("ai"), // Only track AI battles for now
+    result: v.union(v.literal("win"), v.literal("loss")),
+    battleId: v.id("battles"), // Reference to the actual battle
+    completedAt: v.number(), // Timestamp when battle completed
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_date", ["userId", "completedAt"]),
 });

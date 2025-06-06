@@ -31,7 +31,8 @@
 - **Level System**: Added levels and XP to all Pokemon (all start at level 5) with UI display
 
 ## Session Commits (Latest)
-- [current]: feat: Implement complete level-up notification system with backend capture and frontend display
+- [current]: fix: Correct status effect targeting to use player1/player2 instead of attacker/defender
+- b6d95e0: feat: Implement complete level-up notification system with backend capture and frontend display
 - b6d95e0: fix: Remove duplicate player2ActiveHp property in battle patch
 - 481a5cb: fix: Use correct battle status values for Pokemon switching after status KO
 - f3827d7: feat: Add faint logic for Pokemon reduced to 0 HP by status effects

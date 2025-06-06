@@ -30,6 +30,7 @@ function HomePage() {
   const userCollection = useQuery(api.users.getUserCollection) || [];
   const currentUser = useQuery(api.users.getCurrentUser);
   const updateDisplayName = useMutation(api.users.updateDisplayName);
+  const battleRecord = useQuery(api.battles.getPlayerBattleRecord, { limit: 5 });
 
   const handleGenerateTeams = async () => {
     setIsGeneratingTeams(true);
@@ -183,6 +184,40 @@ function HomePage() {
             </div>
           )}
         </div>
+      </Authenticated>
+
+      {/* Battle Record */}
+      <Authenticated>
+        {battleRecord && (battleRecord.stats.wins > 0 || battleRecord.stats.losses > 0) && (
+          <div className="max-w-md mx-auto mb-6">
+            <div className="card bg-base-200">
+              <div className="card-body py-4">
+                <h3 className="card-title text-lg">AI Battle Record</h3>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm">
+                    <span className="text-success font-semibold">{battleRecord.stats.wins}W</span>
+                    <span className="mx-1">-</span>
+                    <span className="text-error font-semibold">{battleRecord.stats.losses}L</span>
+                  </div>
+                  <div className="text-xs opacity-70">
+                    {battleRecord.stats.wins + battleRecord.stats.losses} total battles
+                  </div>
+                </div>
+                <div className="text-xs mt-2">
+                  <span className="opacity-70">Last 5: </span>
+                  {battleRecord.records.map((record, index) => (
+                    <span 
+                      key={index}
+                      className={`mx-0.5 font-bold ${record.result === "win" ? "text-success" : "text-error"}`}
+                    >
+                      {record.result === "win" ? "W" : "L"}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </Authenticated>
 
       <div className="not-prose mt-8">
