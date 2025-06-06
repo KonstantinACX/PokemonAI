@@ -593,7 +593,6 @@ export const performMove = mutation({
                 player2ActivePokemon: nextPokemon,
                 player2ActiveHp: nextPokemonData.hp,
                 player1ActiveHp: finalPlayer1Hp,
-                player2ActiveHp: nextPokemonData.hp,
                 battleLog: newLog,
                 currentTurn: "player1",
               });
