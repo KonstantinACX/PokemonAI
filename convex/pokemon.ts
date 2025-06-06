@@ -153,7 +153,7 @@ const nameSuffixes = [
   "whisper", "echo", "spark", "flame", "frost", "glow", "shine", "burst", "dash"
 ];
 
-function generateRandomPokemon() {
+function generateRandomPokemon(targetLevel?: number) {
   // Generate unique name by combining root + suffix
   const root = nameRoots[Math.floor(Math.random() * nameRoots.length)];
   const suffix = nameSuffixes[Math.floor(Math.random() * nameSuffixes.length)];
@@ -192,24 +192,37 @@ function generateRandomPokemon() {
     }
   }
 
+  const level = targetLevel || 5;
+  const baseHp = Math.floor(Math.random() * 50) + 80; // 80-130 base HP
+  const baseAttack = Math.floor(Math.random() * 40) + 60; // 60-100 base Attack
+  const baseDefense = Math.floor(Math.random() * 40) + 50; // 50-90 base Defense  
+  const baseSpeed = Math.floor(Math.random() * 60) + 40; // 40-100 base Speed
+  
+  // Scale stats based on level (apply level-up stat increases)
+  const levelBonusMultiplier = 1 + ((level - 5) * 0.07); // 7% per level above 5
+  const hp = Math.floor(baseHp * levelBonusMultiplier);
+  const attack = Math.floor(baseAttack * levelBonusMultiplier);
+  const defense = Math.floor(baseDefense * levelBonusMultiplier);
+  const speed = Math.floor(baseSpeed * levelBonusMultiplier);
+
   return {
     name,
     types,
-    hp: Math.floor(Math.random() * 50) + 80, // 80-130 HP
-    attack: Math.floor(Math.random() * 40) + 60, // 60-100 Attack
-    defense: Math.floor(Math.random() * 40) + 50, // 50-90 Defense  
-    speed: Math.floor(Math.random() * 60) + 40, // 40-100 Speed
+    hp,
+    attack,
+    defense,
+    speed,
     moves,
     description: `A mysterious ${types.join("/")} type Pokemon with incredible power.`,
-    level: 5, // All Pokemon start at level 5
-    xp: 0, // Starting XP
+    level,
+    xp: calculateXpForLevel(level),
   };
 }
 
 export const generatePokemon = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const pokemon = generateRandomPokemon();
+  args: { level: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const pokemon = generateRandomPokemon(args.level);
     return await ctx.db.insert("pokemon", pokemon);
   },
 });
@@ -222,9 +235,9 @@ export const getPokemon = query({
 });
 
 export const generatePokemonWithImage = action({
-  args: {},
-  handler: async (ctx): Promise<string> => {
-    const pokemon = generateRandomPokemon();
+  args: { level: v.optional(v.number()) },
+  handler: async (ctx, args): Promise<string> => {
+    const pokemon = generateRandomPokemon(args.level);
     return await ctx.runAction(api.imageGeneration.generatePokemonWithImageAction, pokemon);
   },
 });
@@ -279,14 +292,32 @@ export const createPokemon = mutation({
 });
 
 export const generateTeam = action({
-  args: {},
-  handler: async (ctx): Promise<string[]> => {
+  args: { targetLevels: v.optional(v.array(v.number())) },
+  handler: async (ctx, args): Promise<string[]> => {
     const team: string[] = [];
+    const levels = args.targetLevels || [5, 5, 5]; // Default to level 5 if no levels provided
+    
     for (let i = 0; i < 3; i++) {
-      const pokemonId: string = await ctx.runAction(api.pokemon.generatePokemonWithImage, {});
+      const level = levels[i] || 5; // Fallback to level 5 if not enough levels provided
+      const pokemonId: string = await ctx.runAction(api.pokemon.generatePokemonWithImage, { level });
       team.push(pokemonId);
     }
     return team;
+  },
+});
+
+export const generateOpponentTeam = action({
+  args: { playerTeam: v.array(v.id("pokemon")) },
+  handler: async (ctx, args): Promise<string[]> => {
+    // Get player Pokemon levels
+    const playerPokemon = await Promise.all(
+      args.playerTeam.map(id => ctx.runQuery(api.pokemon.getPokemon, { id }))
+    );
+    
+    const playerLevels = playerPokemon.map(pokemon => pokemon?.level || 5);
+    
+    // Generate opponent team with matching levels
+    return await ctx.runAction(api.pokemon.generateTeam, { targetLevels: playerLevels });
   },
 });
 
@@ -362,4 +393,16 @@ function calculateStatIncrease(baseStat: number, oldLevel: number, newLevel: num
   const levelsGained = newLevel - oldLevel;
   const increasePerLevel = Math.max(1, Math.floor(baseStat * 0.07)); // 7% per level, minimum 1
   return increasePerLevel * levelsGained;
+}
+
+function calculateXpForLevel(level: number): number {
+  // XP thresholds for each level
+  const xpTable = [
+    0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700,
+    3250, 3850, 4500, 5200, 5950, 6750, 7600, 8500, 9450, 10450
+  ];
+  
+  if (level <= 1) return 0;
+  if (level > xpTable.length) return xpTable[xpTable.length - 1];
+  return xpTable[level - 1];
 }

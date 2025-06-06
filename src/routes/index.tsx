@@ -26,6 +26,7 @@ function HomePage() {
 
   const navigate = useNavigate();
   const generateTeam = useAction(api.pokemon.generateTeam);
+  const generateOpponentTeam = useAction(api.pokemon.generateOpponentTeam);
   const createBattle = useMutation(api.battles.createBattle);
   const userCollection = useQuery(api.users.getUserCollection) || [];
   const currentUser = useQuery(api.users.getCurrentUser);
@@ -58,8 +59,8 @@ function HomePage() {
         setSelectedPokemon(prev => ({ ...prev, player: userCollection[0] }));
         setBattleMode("collection");
         
-        // Generate random team for opponent
-        void generateTeam({}).then((team2) => {
+        // Generate opponent team with matching levels
+        void generateOpponentTeam({ playerTeam: userCollection }).then((team2) => {
           setOpponentTeam(team2 as Id<"pokemon">[]);
           setSelectedPokemon(prev => ({ ...prev, opponent: team2[0] as Id<"pokemon"> }));
         });
@@ -89,8 +90,8 @@ function HomePage() {
       setSelectedPokemon(prev => ({ ...prev, player: selectedCollectionPokemon[0] }));
       setShowPokemonSelection(false);
       
-      // Generate random team for opponent
-      const team2 = await generateTeam({});
+      // Generate opponent team with matching levels
+      const team2 = await generateOpponentTeam({ playerTeam: selectedCollectionPokemon });
       setOpponentTeam(team2 as Id<"pokemon">[]);
       setSelectedPokemon(prev => ({ ...prev, opponent: team2[0] as Id<"pokemon"> }));
     }
