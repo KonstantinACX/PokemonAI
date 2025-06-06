@@ -516,18 +516,36 @@ export const performMove = mutation({
       if (finalPlayer1Hp <= 0) {
         newLog.push(`${pokemon1.name} fainted!`);
         
-        // Award XP for knockout to the opposing team
+        // Award XP for knockout to the opposing team and capture level-up results
+        let levelUpResult = null;
         if (battle.battleType === "ai") {
           // In AI battle, player gets XP for AI Pokemon fainting
-          await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+          levelUpResult = await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
             pokemonId: battle.player1ActivePokemon,
             xpGained: 75, // Knockout XP
           });
         } else if (battle.battleType === "multiplayer") {
           // In multiplayer, award XP to the opposing player's active Pokemon
-          await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+          levelUpResult = await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
             pokemonId: battle.player2ActivePokemon,
             xpGained: 75, // Knockout XP
+          });
+        }
+        
+        // Add level-up result to battle if Pokemon leveled up
+        if (levelUpResult?.leveledUp) {
+          const currentLevelUpResults = battle.levelUpResults || [];
+          const receivingPokemon = battle.battleType === "ai" ? pokemon1 : pokemon2;
+          currentLevelUpResults.push({
+            pokemonId: receivingPokemon._id,
+            pokemonName: receivingPokemon.name,
+            oldLevel: levelUpResult.oldLevel,
+            newLevel: levelUpResult.newLevel,
+            xpGained: levelUpResult.xpGained,
+          });
+          
+          await ctx.db.patch(args.battleId, {
+            levelUpResults: currentLevelUpResults,
           });
         }
         
@@ -556,18 +574,35 @@ export const performMove = mutation({
       if (finalPlayer2Hp <= 0) {
         newLog.push(`${pokemon2.name} fainted!`);
         
-        // Award XP for knockout to the opposing team
+        // Award XP for knockout to the opposing team and capture level-up results
+        let levelUpResult = null;
         if (battle.battleType === "ai") {
           // In AI battle, player gets XP for AI Pokemon fainting
-          await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+          levelUpResult = await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
             pokemonId: battle.player1ActivePokemon,
             xpGained: 75, // Knockout XP
           });
         } else if (battle.battleType === "multiplayer") {
           // In multiplayer, award XP to the opposing player's active Pokemon
-          await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+          levelUpResult = await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
             pokemonId: battle.player1ActivePokemon,
             xpGained: 75, // Knockout XP
+          });
+        }
+        
+        // Add level-up result to battle if Pokemon leveled up
+        if (levelUpResult?.leveledUp) {
+          const currentLevelUpResults = battle.levelUpResults || [];
+          currentLevelUpResults.push({
+            pokemonId: pokemon1._id,
+            pokemonName: pokemon1.name,
+            oldLevel: levelUpResult.oldLevel,
+            newLevel: levelUpResult.newLevel,
+            xpGained: levelUpResult.xpGained,
+          });
+          
+          await ctx.db.patch(args.battleId, {
+            levelUpResults: currentLevelUpResults,
           });
         }
         
@@ -748,6 +783,8 @@ async function awardBattleXp(ctx: any, battle: any, player1Won: boolean) {
     SURVIVAL: 25,        // Additional XP for surviving the battle
   };
 
+  const currentLevelUpResults = battle.levelUpResults || [];
+
   // Award XP to player 1 team
   for (const pokemonId of battle.player1Team) {
     let totalXp = BATTLE_XP.PARTICIPATION;
@@ -765,10 +802,24 @@ async function awardBattleXp(ctx: any, battle: any, player1Won: boolean) {
     // Award XP and check for level up
     try {
       console.log(`Awarding ${totalXp} XP to Pokemon ${pokemonId}`);
-      await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+      const levelUpResult = await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
         pokemonId,
         xpGained: totalXp,
       });
+      
+      // Capture level-up result if Pokemon leveled up
+      if (levelUpResult?.leveledUp) {
+        const pokemon = await ctx.db.get(pokemonId);
+        if (pokemon) {
+          currentLevelUpResults.push({
+            pokemonId: pokemon._id,
+            pokemonName: pokemon.name,
+            oldLevel: levelUpResult.oldLevel,
+            newLevel: levelUpResult.newLevel,
+            xpGained: levelUpResult.xpGained,
+          });
+        }
+      }
     } catch (error) {
       console.error("Error awarding XP to Pokemon:", pokemonId, error);
     }
@@ -789,9 +840,35 @@ async function awardBattleXp(ctx: any, battle: any, player1Won: boolean) {
     }
     
     // Award XP and check for level up
-    await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
-      pokemonId,
-      xpGained: totalXp,
+    try {
+      console.log(`Awarding ${totalXp} XP to Pokemon ${pokemonId}`);
+      const levelUpResult = await ctx.runMutation(api.pokemon.awardXpAndCheckLevelUp, {
+        pokemonId,
+        xpGained: totalXp,
+      });
+      
+      // Capture level-up result if Pokemon leveled up
+      if (levelUpResult?.leveledUp) {
+        const pokemon = await ctx.db.get(pokemonId);
+        if (pokemon) {
+          currentLevelUpResults.push({
+            pokemonId: pokemon._id,
+            pokemonName: pokemon.name,
+            oldLevel: levelUpResult.oldLevel,
+            newLevel: levelUpResult.newLevel,
+            xpGained: levelUpResult.xpGained,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error awarding XP to Pokemon:", pokemonId, error);
+    }
+  }
+  
+  // Save all level-up results to the battle
+  if (currentLevelUpResults.length > 0) {
+    await ctx.db.patch(battle._id, {
+      levelUpResults: currentLevelUpResults,
     });
   }
 }

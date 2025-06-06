@@ -142,14 +142,22 @@ function BattlePage() {
     }
   }, [isPlayerTurn, isActive, isOpponentSelecting, performAIMove, battleId, battle, handleSwitchPokemon]);
 
-  // Check for battle end and show level-up notifications
+  // Check for level-up results and show notifications
   useEffect(() => {
-    if (battle?.status === "player1_wins" || battle?.status === "player2_wins") {
-      // TODO: Get actual level-up results from backend
-      // For now, we'll show notifications when the XP awarding system is properly integrated
-      console.log("Battle ended, XP should be awarded to Pokemon");
+    if (battle?.levelUpResults && battle.levelUpResults.length > 0) {
+      // Add any new level-up notifications
+      const newNotifications = battle.levelUpResults.filter(result => 
+        !levelUpNotifications.some(existing => 
+          existing.pokemonName === result.pokemonName && 
+          existing.newLevel === result.newLevel
+        )
+      );
+      
+      if (newNotifications.length > 0) {
+        setLevelUpNotifications(prev => [...prev, ...newNotifications]);
+      }
     }
-  }, [battle?.status]);
+  }, [battle?.levelUpResults, levelUpNotifications]);
 
   // Initialize battle log length on first load
   useEffect(() => {

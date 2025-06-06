@@ -31,7 +31,10 @@
 - **Level System**: Added levels and XP to all Pokemon (all start at level 5) with UI display
 
 ## Session Commits (Latest)
-- [current]: feat: Combine multiple battle messages into single notification with bullet separators
+- [current]: fix: Remove duplicate player2ActiveHp property in battle patch
+- 481a5cb: fix: Use correct battle status values for Pokemon switching after status KO
+- f3827d7: feat: Add faint logic for Pokemon reduced to 0 HP by status effects
+- c9aaf37: feat: Combine multiple battle messages into single notification with bullet separators
 - 5b135f6: feat: Replace notifications immediately instead of stacking them
 - Reverted to eb7984f to restore simple notification system
 - eb7984f: fix: Adjust spacing between Pokemon cards and move elements

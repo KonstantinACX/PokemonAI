@@ -108,6 +108,14 @@ export default defineSchema({
       v.literal("player2_wins")
     ),
     battleLog: v.array(v.string()),
+    // Level-up results from this battle
+    levelUpResults: v.optional(v.array(v.object({
+      pokemonId: v.id("pokemon"),
+      pokemonName: v.string(),
+      oldLevel: v.number(),
+      newLevel: v.number(),
+      xpGained: v.number(),
+    }))),
     // Multiplayer-specific fields
     lastActivity: v.optional(v.number()), // Timestamp for handling timeouts
   }),
