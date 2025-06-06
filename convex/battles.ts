@@ -544,7 +544,7 @@ export const performMove = mutation({
         } else {
           // Force player1 to switch Pokemon
           await ctx.db.patch(args.battleId, {
-            status: "player1_must_switch",
+            status: "player1_selecting",
             player1ActiveHp: finalPlayer1Hp,
             player2ActiveHp: finalPlayer2Hp,
             battleLog: newLog,
@@ -602,7 +602,7 @@ export const performMove = mutation({
           } else {
             // Force player2 to switch Pokemon
             await ctx.db.patch(args.battleId, {
-              status: "player2_must_switch",
+              status: "player2_selecting",
               player1ActiveHp: finalPlayer1Hp,
               player2ActiveHp: finalPlayer2Hp,
               battleLog: newLog,
