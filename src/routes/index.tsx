@@ -188,7 +188,7 @@ function HomePage() {
 
       {/* Battle Record */}
       <Authenticated>
-        {battleRecord && (battleRecord.stats.wins > 0 || battleRecord.stats.losses > 0) && (
+        {battleRecord && (
           <div className="max-w-md mx-auto mb-6">
             <div className="card bg-base-200">
               <div className="card-body py-4">
@@ -203,17 +203,19 @@ function HomePage() {
                     {battleRecord.stats.wins + battleRecord.stats.losses} total battles
                   </div>
                 </div>
-                <div className="text-xs mt-2">
-                  <span className="opacity-70">Last 5: </span>
-                  {battleRecord.records.map((record, index) => (
-                    <span 
-                      key={index}
-                      className={`mx-0.5 font-bold ${record.result === "win" ? "text-success" : "text-error"}`}
-                    >
-                      {record.result === "win" ? "W" : "L"}
-                    </span>
-                  ))}
-                </div>
+                {battleRecord.records.length > 0 && (
+                  <div className="text-xs mt-2">
+                    <span className="opacity-70">Last 5: </span>
+                    {battleRecord.records.map((record, index) => (
+                      <span 
+                        key={index}
+                        className={`mx-0.5 font-bold ${record.result === "win" ? "text-success" : "text-error"}`}
+                      >
+                        {record.result === "win" ? "W" : "L"}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
